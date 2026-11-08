@@ -125,6 +125,35 @@ tr.today td{font-weight:800;color:var(--cobalt)}
 footer{padding-block:28px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line)}
 footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 @media (prefers-reduced-motion:no-preference){.btn,.tab,.day,.slot{transition:transform .15s ease,background .15s ease}.btn:active{transform:scale(.97)}}
+
+/* Démo « gestion par tableau » : grille façon tableur */
+section,#top{scroll-margin-top:72px}
+.annonce{background:var(--cobalt);color:var(--cobalt-ink);font-weight:700;text-align:center}
+.annonce .wrap{padding-block:9px}
+.manage{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:start}
+@media (max-width:900px){.manage{grid-template-columns:1fr}}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+.sheet-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:.92rem}
+.sheet-bar .doc{width:22px;height:28px;border-radius:3px;background:#1e8e3e;position:relative;flex:0 0 auto}
+.sheet-bar .doc::after{content:"";position:absolute;inset:9px 5px 6px;border:2px solid #fff;border-radius:1px}
+.sheet-bar small{font-weight:500;color:var(--muted);margin-left:auto}
+.sheet-scroll{overflow-x:auto}
+.grid{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+.grid th,.grid td{border:1px solid var(--line);padding:0;height:34px;text-align:left}
+.grid thead th,.grid .rn{background:var(--paper);color:var(--muted);font-weight:600;font-size:.78rem;text-align:center;padding:0 8px}
+.grid .rn{width:34px}
+.grid td.h{font-weight:700;background:var(--paper);padding:0 8px;white-space:nowrap}
+.grid input{border:0;border-radius:0;background:transparent;width:100%;min-width:90px;height:34px;padding:0 8px;font:inherit;color:var(--ink)}
+.grid input:focus{outline:2px solid #1e8e3e;outline-offset:-2px;background:var(--surface)}
+.grid td.flash{animation:flash .9s ease}
+@keyframes flash{from{background:color-mix(in srgb,#1e8e3e 25%,transparent)}to{background:transparent}}
+.sheet-tabs{display:flex;gap:2px;padding:6px 8px;border-top:1px solid var(--line);background:var(--paper);overflow-x:auto}
+.sheet-tabs button{border:0;background:transparent;color:var(--muted);font:600 .85rem var(--body);padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.sheet-tabs button[aria-selected="true"]{background:var(--surface);color:#1e8e3e;box-shadow:0 1px 0 var(--line)}
+.howto{display:grid;gap:14px}
+.howto ol{margin:0;padding-left:20px;display:grid;gap:8px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);border-radius:999px;padding:10px 18px;font-weight:700;font-size:.92rem;z-index:20;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
+.toast a{color:var(--butter)}
 </style>
 
 <div class="demo"><div class="wrap">Site de démonstration : salon, coordonnées, équipe et avis sont fictifs.</div></div>
@@ -132,6 +161,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   <a class="logo" href="#top">Maison <span>Frange</span></a>
   <nav><a class="nl" href="#tarifs">Tarifs</a><a class="nl" href="#equipe">Équipe</a><a class="nl" href="#infos">Accès</a><a class="btn" href="#rdv">Prendre RDV</a></nav>
 </div></header>
+<div class="annonce" id="annonce" hidden><div class="wrap" id="annonceTxt"></div></div>
 
 <main id="top">
 <div class="hero"><div class="wrap">
@@ -152,7 +182,28 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   </aside>
 </div></div>
 
-<section class="band" id="tarifs"><div class="wrap">
+<section class="band" id="gestion"><div class="wrap">
+  <div class="sec-head"><div><span class="eyebrow">Démonstration pour le gérant</span><h2>Modifiez votre site depuis un tableau</h2><p>Le salon gère ses horaires, ses tarifs et ses annonces dans un tableau Google Sheets, depuis son téléphone. Le site se met à jour tout seul.</p></div></div>
+  <div class="manage">
+    <div class="sheet">
+      <div class="sheet-bar"><span class="doc" aria-hidden="true"></span>Site du salon – contenu<small id="saved">Enregistré</small></div>
+      <div class="sheet-scroll"><table class="grid" id="grid"></table></div>
+      <div class="sheet-tabs" role="tablist" id="sheetTabs"></div>
+    </div>
+    <div class="howto">
+      <h3 style="font-size:1.4rem">Essayez</h3>
+      <ol>
+        <li>Dans l'onglet <b>Annonce</b>, écrivez « Fermé exceptionnellement samedi 14 ».</li>
+        <li>Dans <b>Tarifs</b>, changez le prix d'une coupe.</li>
+        <li>Dans <b>Horaires</b>, écrivez « Fermé » pour le samedi.</li>
+      </ol>
+      <p class="note" style="margin:0">Simulation : ce tableau imite Google Sheets et ne modifie le site que dans votre navigateur. Sur le vrai site, le gérant modifie son propre tableau Google et le site affiche les nouvelles valeurs automatiquement, en général en quelques minutes.</p>
+      <p style="margin:0"><button class="btn alt" type="button" id="resetSheet">Remettre les valeurs d'origine</button></p>
+    </div>
+  </div>
+</div></section>
+
+<section id="tarifs"><div class="wrap">
   <div class="sec-head"><div><span class="eyebrow">Prestations</span><h2>Tarifs</h2><p>Prix affichés TTC. Les durées sont indicatives et dépendent de la longueur des cheveux.</p></div></div>
   <div class="tabs" role="tablist" id="tabs"></div>
   <div class="menu" id="menu"></div>
@@ -215,62 +266,80 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
 <footer><div class="wrap"><span>© Maison Frange — salon fictif de démonstration</span><span>Mentions légales · Confidentialité</span></div></footer>
 
+
+
 <script>
 (function(){
 const $=id=>document.getElementById(id);
-const MENU={
-  "Femme":[["Coupe + brushing","45 min",42],["Brushing seul","30 min",28],["Coupe frange","10 min",8],["Chignon / attache","45 min",45]],
-  "Homme":[["Coupe classique","30 min",24],["Dégradé","40 min",28],["Taille de barbe","20 min",15],["Coupe + barbe","50 min",36]],
-  "Enfant":[["Coupe moins de 10 ans","20 min",15],["Coupe 10–16 ans","30 min",19]],
-  "Couleur":[["Couleur racines","1 h 15",48],["Balayage","2 h",85],["Couleur végétale","1 h 30",62],["Soin profond","20 min",18]]
-};
-// Horaires : index = jour JS (0 = dimanche)
-const HOURS={0:null,1:null,2:[9,19],3:[9,19],4:[9,19],5:[9,20],6:[8.5,18]};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const DAYN=["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
-const hh=h=>Math.floor(h)+" h"+(h%1?" 30":"");
 
-// Tarifs
-const cats=Object.keys(MENU);let cur=cats[0];
+// ---- Contenu du site, tel qu'il serait dans le tableau Google Sheets du salon ----
+const DEFAULT={
+  "Horaires":{cols:["Jour","Ouverture","Fermeture"],rows:[
+    ["Lundi","Fermé",""],["Mardi","9:00","19:00"],["Mercredi","9:00","19:00"],["Jeudi","9:00","19:00"],
+    ["Vendredi","9:00","20:00"],["Samedi","8:30","18:00"],["Dimanche","Fermé",""]]},
+  "Tarifs":{cols:["Catégorie","Prestation","Durée","Prix (€)"],rows:[
+    ["Femme","Coupe + brushing","45 min","42"],["Femme","Brushing seul","30 min","28"],["Femme","Coupe frange","10 min","8"],["Femme","Chignon / attache","45 min","45"],
+    ["Homme","Coupe classique","30 min","24"],["Homme","Dégradé","40 min","28"],["Homme","Taille de barbe","20 min","15"],["Homme","Coupe + barbe","50 min","36"],
+    ["Enfant","Coupe moins de 10 ans","20 min","15"],["Enfant","Coupe 10–16 ans","30 min","19"],
+    ["Couleur","Couleur racines","1 h 15","48"],["Couleur","Balayage","2 h","85"],["Couleur","Couleur végétale","1 h 30","62"],["Couleur","Soin profond","20 min","18"]]},
+  "Annonce":{cols:["Message affiché en haut du site (laisser vide pour masquer)"],rows:[[""]]}
+};
+let SHEET=JSON.parse(JSON.stringify(DEFAULT));
+let HOURS={},MENU={},cats=[],cur=null;
+
+const toH=v=>{const m=String(v).trim().match(/^(\d{1,2})(?:[:h]\s?(\d{2}))?$/i);return m?+m[1]+(m[2]?+m[2]/60:0):null};
+const hh=h=>Math.floor(h)+" h"+(Math.round(h%1*60)?" "+String(Math.round(h%1*60)).padStart(2,'0'):"");
+function parse(){
+  HOURS={};
+  SHEET.Horaires.rows.forEach(([d,o,f])=>{const i=DAYN.findIndex(x=>x.toLowerCase()===String(d).trim().toLowerCase());if(i<0)return;const a=toH(o),b=toH(f);HOURS[i]=(a!==null&&b!==null&&b>a)?[a,b]:null});
+  MENU={};
+  SHEET.Tarifs.rows.forEach(([c,n,d,p])=>{if(!String(c).trim()||!String(n).trim())return;(MENU[c.trim()]=MENU[c.trim()]||[]).push([n,d,p])});
+  cats=Object.keys(MENU);if(!cats.includes(cur))cur=cats[0];
+}
+
+// ---- Rendu du site ----
 function drawMenu(){
-  $('tabs').innerHTML=cats.map(c=>`<button class="tab" role="tab" type="button" aria-selected="${c===cur}" data-c="${c}">${c}</button>`).join('');
-  $('menu').innerHTML=MENU[cur].map(([n,d,p])=>`<div class="item"><span class="name">${n}</span><span class="dots"></span><span class="price">${p} €</span><small>${d}</small></div>`).join('');
+  $('tabs').innerHTML=cats.map(c=>`<button class="tab" role="tab" type="button" aria-selected="${c===cur}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  $('menu').innerHTML=(MENU[cur]||[]).map(([n,d,p])=>`<div class="item"><span class="name">${esc(n)}</span><span class="dots"></span><span class="price">${esc(p)} €</span><small>${esc(d)}</small></div>`).join('');
+  $('bService').innerHTML=cats.flatMap(c=>MENU[c].map(([n,,p])=>`<option>${esc(c)} – ${esc(n)} (${esc(p)} €)</option>`)).join('');
 }
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b){cur=b.dataset.c;drawMenu()}});
-drawMenu();
+let now=new Date();
+function drawHours(){
+  now=new Date();const dow=now.getDay(),hNow=now.getHours()+now.getMinutes()/60;
+  $('hours').innerHTML=[1,2,3,4,5,6,0].map(d=>`<tr class="${d===dow?'today':''}"><td>${DAYN[d]}</td><td>${HOURS[d]?hh(HOURS[d][0])+" – "+hh(HOURS[d][1]):"Fermé"}</td></tr>`).join('');
+  const st=$('status'),open=HOURS[dow]&&hNow>=HOURS[dow][0]&&hNow<HOURS[dow][1];
+  st.classList.toggle('closed',!open);
+  st.querySelector('span').textContent=open?`Ouvert · ferme à ${hh(HOURS[dow][1])}`:"Fermé en ce moment";
+}
+function drawAnnonce(){const t=String(SHEET.Annonce.rows[0][0]||'').trim();$('annonce').hidden=!t;$('annonceTxt').textContent=t}
 
-// Horaires + statut
-const now=new Date(),dow=now.getDay(),hNow=now.getHours()+now.getMinutes()/60;
-$('hours').innerHTML=[1,2,3,4,5,6,0].map(d=>`<tr class="${d===dow?'today':''}"><td>${DAYN[d]}</td><td>${HOURS[d]?hh(HOURS[d][0])+" – "+hh(HOURS[d][1]):"Fermé"}</td></tr>`).join('');
-const st=$('status'),open=HOURS[dow]&&hNow>=HOURS[dow][0]&&hNow<HOURS[dow][1];
-st.classList.toggle('closed',!open);
-st.querySelector('span').textContent=open?`Ouvert · ferme à ${hh(HOURS[dow][1])}`:"Fermé en ce moment";
-
-// Créneaux (démonstration : occupation simulée, stable pour une date donnée)
+// ---- Réservation (créneaux occupés simulés, stables pour une date) ----
 function rand(seed){let x=seed%2147483647;return()=>(x=x*16807%2147483647)/2147483647}
 function slotsFor(date){
   const h=HOURS[date.getDay()];if(!h)return[];
-  const r=rand(date.getFullYear()*1000+date.getMonth()*40+date.getDate()),out=[];
-  for(let t=h[0];t<=h[1]-1;t+=.5){
-    const past=date.toDateString()===now.toDateString()&&t<=hNow+.5;
-    out.push({t,free:!past&&r()>.45});
-  }
+  const r=rand(date.getFullYear()*1000+date.getMonth()*40+date.getDate()),out=[],hNow=now.getHours()+now.getMinutes()/60;
+  for(let t=Math.ceil(h[0]*2)/2;t<=h[1]-1;t+=.5){const past=date.toDateString()===now.toDateString()&&t<=hNow+.5;out.push({t,free:!past&&r()>.45})}
   return out;
 }
-const days=[];for(let i=0;days.length<7&&i<14;i++){const d=new Date(now);d.setDate(now.getDate()+i);if(HOURS[d.getDay()])days.push(d)}
-let selDay=null,selSlot=null;
-const allServices=cats.flatMap(c=>MENU[c].map(([n,,p])=>`${c} – ${n} (${p} €)`));
-$('bService').innerHTML=allServices.map(s=>`<option>${s}</option>`).join('');
-function drawDays(){
-  $('days').innerHTML=days.map((d,i)=>{const free=slotsFor(d).some(s=>s.free);return `<button type="button" class="day" data-i="${i}" aria-pressed="${selDay===i}" ${free?'':'disabled'}>${DAYN[d.getDay()].slice(0,3)}.<small>${d.getDate()}/${d.getMonth()+1}</small></button>`}).join('');
-}
+let days=[],selDay=null,selSlot=null;
+function buildDays(){days=[];for(let i=0;days.length<7&&i<21;i++){const d=new Date(now);d.setDate(now.getDate()+i);if(HOURS[d.getDay()])days.push(d)}selDay=null;selSlot=null}
+function drawDays(){$('days').innerHTML=days.map((d,i)=>{const free=slotsFor(d).some(s=>s.free);return `<button type="button" class="day" data-i="${i}" aria-pressed="${selDay===i}" ${free?'':'disabled'}>${DAYN[d.getDay()].slice(0,3)}.<small>${d.getDate()}/${d.getMonth()+1}</small></button>`}).join('')||'<span class="note">Aucun jour d\'ouverture.</span>'}
 function drawSlots(){
   if(selDay===null){$('slots').innerHTML='<span class="note" style="grid-column:1/-1;margin:0">Choisissez d\'abord un jour.</span>';return}
-  $('slots').innerHTML=slotsFor(days[selDay]).map(s=>`<button type="button" class="slot" data-t="${s.t}" aria-pressed="${selSlot===s.t}" ${s.free?'':'disabled'}>${hh(s.t).replace(' h','h').replace(' 30','30')}</button>`).join('');
+  $('slots').innerHTML=slotsFor(days[selDay]).map(s=>`<button type="button" class="slot" data-t="${s.t}" aria-pressed="${selSlot===s.t}" ${s.free?'':'disabled'}>${hh(s.t).replace(' h ','h').replace(' h','h')}</button>`).join('');
 }
 function recap(){
+  if(!$('recap'))return;
   const ok=selDay!==null&&selSlot!==null;
-  $('recap').innerHTML=ok?`<b>${$('bService').value}</b><br>${DAYN[days[selDay].getDay()]} ${days[selDay].toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} à ${hh(selSlot)} · ${$('bPro').value}`:'Choisissez un jour et une heure.';
+  $('recap').innerHTML=ok?`<b>${esc($('bService').value)}</b><br>${DAYN[days[selDay].getDay()]} ${days[selDay].toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} à ${hh(selSlot)} · ${esc($('bPro').value)}`:'Choisissez un jour et une heure.';
   $('bSubmit').disabled=!(ok&&$('bName').value.trim().length>1&&$('bPhone').value.replace(/\D/g,'').length>=10);
+}
+function drawNext(){
+  $('nextSlot').textContent='Aucun cette semaine';
+  for(const [i,d] of days.entries()){const s=slotsFor(d).find(s=>s.free);if(s){$('nextSlot').textContent=(d.toDateString()===now.toDateString()?"Aujourd'hui":DAYN[d.getDay()])+" "+hh(s.t);break}}
 }
 $('days').addEventListener('click',e=>{const b=e.target.closest('.day');if(!b||b.disabled)return;selDay=+b.dataset.i;selSlot=null;drawDays();drawSlots();recap()});
 $('slots').addEventListener('click',e=>{const b=e.target.closest('.slot');if(!b||b.disabled)return;selSlot=+b.dataset.t;drawSlots();recap()});
@@ -278,11 +347,38 @@ $('booking').addEventListener('input',recap);
 $('booking').addEventListener('change',recap);
 $('booking').addEventListener('submit',e=>{
   e.preventDefault();if($('bSubmit').disabled)return;
-  $('booking').innerHTML=`<div class="step done" style="grid-column:1/-1"><div class="big">Demande prête, ${$('bName').value.trim().split(' ')[0]}</div><p>${$('recap').innerHTML}</p><p class="note">Démonstration : aucune réservation n'a été envoyée. Sur le vrai site, le salon reçoit la demande et le client reçoit un SMS de confirmation.</p></div>`;
+  $('booking').innerHTML=`<div class="step done" style="grid-column:1/-1"><div class="big">Demande prête, ${esc($('bName').value.trim().split(' ')[0])}</div><p>${$('recap').innerHTML}</p><p class="note">Démonstration : aucune réservation n'a été envoyée. Sur le vrai site, le salon reçoit la demande et le client reçoit un SMS de confirmation.</p></div>`;
 });
-// Prochain créneau
-for(const [i,d] of days.entries()){const s=slotsFor(d).find(s=>s.free);if(s){$('nextSlot').textContent=(i===0&&d.toDateString()===now.toDateString()?"Aujourd'hui":DAYN[d.getDay()])+" "+hh(s.t);break}}
-drawDays();drawSlots();recap();
+
+function renderSite(){parse();drawMenu();drawHours();drawAnnonce();if($('days')){buildDays();drawDays();drawSlots();recap()}drawNext()}
+
+// ---- Le tableau façon Google Sheets ----
+const tabNames=Object.keys(SHEET);let curTab="Annonce";
+const LETTERS="ABCDEFGH";
+function drawSheet(){
+  const t=SHEET[curTab];
+  $('sheetTabs').innerHTML=tabNames.map(n=>`<button type="button" role="tab" aria-selected="${n===curTab}" data-t="${n}">${n}</button>`).join('');
+  $('grid').innerHTML=`<thead><tr><th class="rn"></th>${t.cols.map((_,i)=>`<th>${LETTERS[i]}</th>`).join('')}</tr></thead><tbody>
+    <tr><td class="rn">1</td>${t.cols.map(c=>`<td class="h">${esc(c)}</td>`).join('')}</tr>
+    ${t.rows.map((r,ri)=>`<tr><td class="rn">${ri+2}</td>${r.map((v,ci)=>`<td><input id="c-${curTab}-${ri}-${ci}" data-r="${ri}" data-c="${ci}" value="${esc(v)}" aria-label="${esc(t.cols[ci])}, ligne ${ri+2}"></td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+$('sheetTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b){curTab=b.dataset.t;drawSheet()}});
+const TARGET={"Horaires":"#infos","Tarifs":"#tarifs","Annonce":"#top"};
+let timer,toastEl;
+function toast(){
+  if(!toastEl){toastEl=document.createElement('div');toastEl.className='toast';toastEl.setAttribute('role','status');document.body.appendChild(toastEl)}
+  toastEl.innerHTML=`Site mis à jour <a href="${TARGET[curTab]}">Voir</a>`;toastEl.hidden=false;
+  clearTimeout(toastEl._t);toastEl._t=setTimeout(()=>toastEl.hidden=true,2600);
+}
+$('grid').addEventListener('input',e=>{
+  const i=e.target;if(i.tagName!=='INPUT')return;
+  SHEET[curTab].rows[+i.dataset.r][+i.dataset.c]=i.value;
+  $('saved').textContent='Enregistrement…';
+  clearTimeout(timer);timer=setTimeout(()=>{renderSite();$('saved').textContent='Enregistré';i.closest('td').classList.remove('flash');void i.offsetWidth;i.closest('td').classList.add('flash');toast()},450);
+});
+$('resetSheet').onclick=()=>{SHEET=JSON.parse(JSON.stringify(DEFAULT));drawSheet();renderSite()};
+
+drawSheet();renderSite();
 
 // Copier le téléphone
 document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',()=>{
