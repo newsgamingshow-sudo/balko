@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://newsgamingshow-sudo.github.io/balko/sitemap.xml

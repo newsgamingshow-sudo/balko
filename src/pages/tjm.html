@@ -1,0 +1,43 @@
+title: Calculateur de TJM freelance gratuit — combien facturer par jour ? | Balko
+description: Calculez votre taux journalier moyen (TJM) de freelance ou micro-entrepreneur à partir du revenu net visé, de vos jours travaillés, de vos frais et de vos cotisations.
+---
+<h1>Calculateur de TJM freelance</h1>
+<p class="lead">Indiquez le revenu que vous voulez vous verser : Balko calcule le prix minimum à facturer par jour, frais et cotisations compris.</p>
+<form class="card" id="f" oninput="calc()" onsubmit="return false">
+<div class="row">
+  <div><label>Revenu net mensuel visé (€)</label><input id="net" type="number" value="2500" min="0"></div>
+  <div><label>Frais professionnels mensuels (€)</label><input id="frais" type="number" value="150" min="0"><small style="color:var(--muted)">Logiciels, matériel, assurance, téléphone…</small></div>
+</div>
+<div class="row">
+  <div><label>Semaines de congés par an</label><input id="conges" type="number" value="5" min="0" max="52"></div>
+  <div><label>Jours facturés par semaine</label><input id="jps" type="number" value="4" min="0" max="7" step="0.5"><small style="color:var(--muted)">Le reste : prospection, administratif, formation.</small></div>
+</div>
+<div class="row">
+  <div><label>Statut / activité</label><select id="statut"><option value="21.2">Micro – prestations de services BIC</option><option value="26.1">Micro – profession libérale (SSI)</option><option value="23.2">Micro – profession libérale CIPAV</option><option value="custom">Autre (taux personnalisé)</option></select></div>
+  <div><label>Taux de cotisations sociales (% du CA)</label><input id="taux" type="number" value="21.2" step="0.1" min="0" max="80"></div>
+  <div><label>Impôt / versement libératoire (% du CA)</label><input id="impot" type="number" value="1.7" step="0.1" min="0" max="50"></div>
+</div>
+<p class="note">Les taux proposés sont indicatifs et changent régulièrement. Vérifiez le vôtre sur autoentrepreneur.urssaf.fr et corrigez-le dans le champ ci-dessus.</p>
+</form>
+<div class="grid">
+  <div class="card"><p>TJM minimum</p><div class="result" id="r-tjm">–</div></div>
+  <div class="card"><p>Chiffre d'affaires annuel nécessaire</p><div class="result" id="r-ca">–</div></div>
+  <div class="card"><p>Jours facturés par an</p><div class="result" id="r-j">–</div></div>
+</div>
+<div class="card" id="detail"></div>
+<div class="promo"><h2 style="margin-top:0">Suivez votre CA et vos cotisations chaque mois</h2><p>Le Pack Pro contient un tableau de bord qui calcule automatiquement vos cotisations, votre CA restant avant le plafond et votre revenu net réel.</p><a class="btn" href="pack.html">Voir le Pack Pro</a></div>
+<h2>Comment calculer son TJM ?</h2>
+<p>Le TJM se calcule à partir de ce que vous voulez gagner, pas de ce que facturent les autres. On additionne le revenu net visé et les frais sur un an, on divise par la part du chiffre d'affaires qui vous reste après cotisations et impôt, puis par le nombre réel de jours facturables. Une erreur fréquente consiste à compter 5 jours facturés par semaine toute l'année : en pratique, un freelance facture souvent 150 à 200 jours par an.</p>
+<script>
+const $=id=>document.getElementById(id);
+const eur=n=>isFinite(n)?n.toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}):'–';
+$('statut').onchange=()=>{if($('statut').value!=='custom')$('taux').value=$('statut').value;calc()};
+function calc(){
+  const net=+$('net').value*12,frais=+$('frais').value*12,taux=+$('taux').value/100,imp=+$('impot').value/100;
+  const jours=Math.max(0,(52-+$('conges').value)*+$('jps').value-10);
+  const ca=(net+frais)/(1-taux-imp);
+  $('r-ca').textContent=eur(ca);$('r-j').textContent=jours;$('r-tjm').textContent=jours?eur(ca/jours):'–';
+  $('detail').innerHTML=`<strong>Détail annuel</strong><table><tr><td>Chiffre d'affaires</td><td>${eur(ca)}</td></tr><tr><td>Cotisations sociales</td><td>− ${eur(ca*taux)}</td></tr><tr><td>Impôt</td><td>− ${eur(ca*imp)}</td></tr><tr><td>Frais professionnels</td><td>− ${eur(frais)}</td></tr><tr><td><strong>Revenu net</strong></td><td><strong>${eur(net)}</strong></td></tr></table><p style="color:var(--muted);font-size:.9rem">Jours facturés = (52 − semaines de congés) × jours par semaine − 10 jours fériés environ.</p>`;
+}
+calc();
+</script>

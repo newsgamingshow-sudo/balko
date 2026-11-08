@@ -1,0 +1,33 @@
+:root{--bg:#f7f7f4;--card:#fff;--ink:#1d1d1b;--muted:#5d5d58;--line:#e2e1da;--accent:#1f6f5c;--accent-ink:#fff;--warn:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1c;--ink:#ecebe6;--muted:#a3a29b;--line:#34332f;--accent:#4fb39a;--accent-ink:#0d1f1a;--warn:#e0b050}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+header.site{border-bottom:1px solid var(--line);background:var(--card)}
+header.site .in,main,footer .in{max-width:960px;margin:0 auto;padding:0 16px}
+header.site .in{display:flex;gap:16px;align-items:center;justify-content:space-between;height:60px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:1.25rem;text-decoration:none;color:var(--ink)}
+nav a{margin-left:14px;text-decoration:none;color:var(--muted);font-size:.95rem}
+nav a:hover{color:var(--ink)}
+main{padding-top:28px;padding-bottom:48px}
+h1{font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.2;margin:.2em 0 .4em}
+h2{font-size:1.25rem;margin-top:1.8em}
+.lead{font-size:1.1rem;color:var(--muted);max-width:680px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:24px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+.card h3{margin:0 0 6px}
+.card p{margin:0 0 12px;color:var(--muted)}
+.btn{display:inline-block;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:11px 18px;font-weight:650;font-size:1rem;text-decoration:none;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+label{display:block;font-size:.88rem;color:var(--muted);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:64px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.note{font-size:.88rem;color:var(--warn)}
+.result{font-size:1.6rem;font-weight:800}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:.88rem;padding:20px 0}
+footer a{color:var(--muted);margin-right:14px}
+.promo{border:2px solid var(--accent);border-radius:12px;padding:20px;margin:32px 0;background:var(--card)}
+@media print{header.site,footer,.noprint,.promo{display:none!important}body{background:#fff;color:#000}main{padding:0;max-width:none}}
