@@ -85,6 +85,7 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
   <button class="start" id="startBtn" type="button">Descendre</button>
   <div id="pad">Manette : appuie sur n'importe quel bouton pour la connecter.</div>
   <button class="start small" id="cfgBtn" type="button">Configurer la manette</button>
+  <div id="padDiag" style="margin-top:6px;font-size:17px;color:#6d6458;max-width:760px"></div>
   <div class="ctrls">
     <div><h3>Manette Xbox</h3>
       Stick gauche · <span>se déplacer</span><br>Stick droit · <span>regarder</span><br>RT · <span>coup rapide</span><br>RB · <span>coup lourd</span><br>B · <span>esquive</span><br>A · <span>interagir</span><br>X · <span>boire une fiole</span><br>LB / L3 · <span>courir</span><br>LT (maintenir) · <span>tendre l'oreille</span><br>Menu · <span>pause</span></div>
@@ -684,6 +685,9 @@ const PADNAMES=['A','B','X','Y','LB','RB','LT','RT','View','Menu','L3','R3','Cro
 const STD_MAP={b:Array.from({length:17},(_,i)=>({t:'b',i})),a:[0,1,2,3].map(i=>({i,s:1}))};
 let padMap=STD_MAP,padStd=true,activeGp=null,lastPadName='';const firstAx={};
 function loadMap(gp){padStd=gp.mapping==='standard';let m=null;try{m=JSON.parse(localStorage.getItem('echo-pad:'+gp.id))}catch(e){}padMap=m||STD_MAP;padInfo()}
+function padDiag(list){const el=$('padDiag');if(!el)return;const ua=navigator.userAgent;const br=/Edg\//.test(ua)?'Edge':/OPR\/|Opera/.test(ua)?'Opera':/Firefox\//.test(ua)?'Firefox':/Chrome\//.test(ua)?'Chrome':/Safari\//.test(ua)?'Safari':'autre';
+  const n=Array.from(list||[]).filter(Boolean).length;let inFrame=false;try{inFrame=window.top!==window.self}catch(e){inFrame=true}
+  el.textContent='Diagnostic : '+br+' · '+(location.protocol==='file:'?'fichier local':location.protocol.replace(':',''))+(inFrame?' · dans un cadre':'')+' · contexte sécurisé : '+(window.isSecureContext?'oui':'non')+' · '+(padErr||'API manette OK')+' · manettes vues : '+n+' · fenêtre active : '+(document.hasFocus()?'oui':'non (clique dans le jeu)')}
 function padInfo(){const el=$('pad');if(!el)return;if(!activeGp){el.textContent="Manette : appuie sur n'importe quel bouton pour la connecter.";return}
   const custom=padMap!==STD_MAP;el.textContent='Manette détectée ✓ '+activeGp.id.replace(/\(.*?\)/g,'').trim().slice(0,40)+(custom?' · configuration perso':padStd?'':' · disposition non standard, configure-la')+(lastPadName?' · dernière touche : '+lastPadName:'')}
 addEventListener('gamepadconnected',e=>{if(state.mode==='play')flash('Manette connectée')});
@@ -691,7 +695,9 @@ addEventListener('gamepaddisconnected',e=>{if(padIndex===e.gamepad.index){padInd
 function lockPointer(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
 document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==canvas&&state.mode==='play'&&lastDevice==='kb')openPause()});
 function rawBtn(b){return b?(typeof b==='object'?(b.pressed?Math.max(1,b.value):b.value):b):0}
-function pollPad(){let list=[];try{list=navigator.getGamepads?navigator.getGamepads():[]}catch(e){}
+let padErr='',padDiagT=0;
+function pollPad(){let list=[];try{if(!navigator.getGamepads)padErr='API manette absente de ce navigateur';else{list=navigator.getGamepads()||[];padErr=''}}catch(e){padErr='API manette bloquée ('+(e.name||'erreur')+')'}
+  if(state.mode==='title'&&(padDiagT-=1)<=0){padDiagT=30;padDiag(list)}
   // on suit la manette qui vient d'être utilisée (évite les périphériques fantômes)
   for(const g of list){if(!g)continue;if(!firstAx[g.index])firstAx[g.index]=Array.from(g.axes);
     const act=Array.from(g.buttons).some(b=>rawBtn(b)>0.5)||Array.from(g.axes).some((a,i)=>Math.abs(a-(firstAx[g.index][i]||0))>0.5);
