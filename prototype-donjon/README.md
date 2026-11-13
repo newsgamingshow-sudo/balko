@@ -1,24 +1,34 @@
-# L'Écho des Profondeurs (prototype)
+# L'Écho des Profondeurs (prototype v9)
 
 Prototype jouable d'un dungeon crawler en vue FPS : dark fantasy, rendu 3D pixelisé, horreur sonore.
 
 ## Lancer le jeu
 
 Ouvre `echo-des-profondeurs.html` dans Chrome ou Edge (fonctionne hors ligne, Three.js est intégré au fichier).
-Joue avec un casque audio.
+Joue avec un casque audio. Manette Xbox : appuie sur un bouton une fois la page ouverte.
+Si une touche ne répond pas : écran titre ou pause → « Tester la manette » / « Configurer la manette ».
 
-Manette Xbox (Bluetooth) : connecte-la au PC, puis appuie sur un bouton une fois la page ouverte.
+## Histoire
 
-## Contenu du prototype
+Au premier feu de camp, un sac abandonné contient la note de « M. » : les gobelins enlèvent des gens pour
+les réduire en esclavage et nourrir les choses qui naissent plus bas. À chaque étage, des survivants attendent d'être libérés.
 
-- Un étage généré aléatoirement (salles, couloirs, cellules), qui change à chaque mort.
-- Feu de camp : repos, améliorations (vitalité, endurance, lame, fioles).
-- Gobelins avec voix 3D : marmonnements, cris d'alerte, bruits de pas. On les entend à travers les murs (son étouffé).
-- 3 prisonniers qui appellent à l'aide. Une fois libérés, ils rejoignent le camp et débloquent des choses (forge, potions, carte).
-- Un gobelin imite les cris des prisonniers.
-- Combat : coup rapide, coup lourd, esquive, endurance, fioles de soin.
-- Boss : le Chef gobelin, qui garde la trappe vers l'étage suivant.
-- Le Rampant (nouveau monstre tous les deux étages) : grande créature pâle et très rapide. On l'entend se racler la gorge et hurler dans les couloirs. Il s'accroche dans les angles des murs pour t'observer, et quand tu le vois, il hurle et attaque. L'étage 3 n'abrite que lui, et il y est immortel : on peut seulement le faire fuir en le frappant. À partir de l'étage 4, il rôde avec les gobelins et peut mourir.
-- Mort : on perd l'or porté, on garde les améliorations.
+## Les 5 étages
+
+1. **Les Geôles** : gobelins variés (maigres, brutes casquées, lanceurs de couteaux, imitateur), boss Chef gobelin, 3 prisonniers qui rejoignent le camp.
+2. **Les Couveuses** : les Aveugles chassent au son. Avancer sans bruit (LT / C) pour passer à côté.
+3. **Le Nid** : seulement le Rampant, immortel, et aucune torche allumée. Il rampe au plafond, s'accroche aux angles, surgit derrière toi, casse les caisses et fuit par les trous des murs.
+4. **Les Ombres** : elles brûlent face à ta torche et fuient dans les murs, mais reviennent par-derrière.
+5. **La Matrice** : tous les monstres et la Couveuse, boss qui pond des rejetons. Fin de la démo, puis étages sans fin.
+
+Chaque nouveau monstre est expliqué par une note près du feu de camp.
+
+## Systèmes
+
+- Caisses et tonneaux à briser : or ou objets, rangés dans le coffre du camp (inventaire).
+- Objets : fiole, résine de torche, pierre à aiguiser, cœur séché, herbe amère (bonus permanents).
+- Trous dans les murs : les monstres en fuite s'y cachent puis ressortent ailleurs.
+- Peur : à l'approche des monstres, la torche faiblit, l'image se désature, le cœur bat.
+- Améliorations au feu de camp, l'or porté est perdu à la mort, le coffre est conservé.
 
 Tout (graphismes, sons, musique) est généré par le code, sans fichier externe.
