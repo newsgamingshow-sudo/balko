@@ -111,8 +111,8 @@ button{font:inherit;color:inherit}
 
 <div class="wrap">
   <div class="topbar">
-    <h1>Arènes de Valdor</h1>
-    <div class="purse"><span>Or <b id="gold">0</b></span><span>Victoires <b id="wins">0</b></span></div>
+    <h1 data-t="title">Arènes de Valdor</h1>
+    <div class="purse"><span><span data-t="gold">Or</span> <b id="gold">0</b></span><span><span data-t="wins">Victoires</span> <b id="wins">0</b></span></div>
   </div>
 
   <div class="stage" id="stage">
@@ -123,32 +123,32 @@ button{font:inherit;color:inherit}
       <div class="vs">VS</div>
       <div class="bar r"><div class="nm" id="nmB"></div><div class="hp"><u id="hpBu"></u><i id="hpB"></i></div></div>
     </div>
-    <div class="stage-msg" id="msg"><h2 id="msgT">Cour de Valdor</h2><p id="msgP">Lancez un combat : votre héros se bat tout seul.</p></div>
+    <div class="stage-msg" id="msg"><h2 id="msgT" data-t="court">Cour de Valdor</h2><p id="msgP" data-t="courtP">Lancez un combat : votre héros se bat tout seul.</p></div>
     <button class="speed" id="speed" type="button" hidden>×1</button>
   </div>
 
   <div class="actions">
-    <button class="btn" id="findBtn" type="button">Trouver un combat<small>Arène · adversaire de votre niveau</small></button>
-    <button class="btn dark" id="bossBtn" type="button">Affronter un boss<small>Coffres et objets rares</small></button>
+    <button class="btn" id="findBtn" type="button"><span data-t="find">Trouver un combat</span><small data-t="findS">Arène · adversaire de votre niveau</small></button>
+    <button class="btn dark" id="bossBtn" type="button"><span data-t="boss">Affronter un boss</span><small data-t="bossS">Coffres et objets rares</small></button>
   </div>
 
   <div class="grid">
     <div class="panel">
       <div class="hero"><canvas id="portrait" width="96" height="96"></canvas>
-        <div><div class="px" id="heroName">Héros</div><div class="lvl">Niveau <span id="lvl">1</span></div>
+        <div><div class="px" id="heroName" data-t="hero">Héros</div><div class="lvl"><span data-t="level">Niveau</span> <span id="lvl">1</span></div>
           <div class="xp"><i id="xpbar"></i></div><div class="xpt" id="xpt"></div></div></div>
       <div class="stats" id="stats"></div>
       <div class="power" id="power"></div>
       <div class="slots" id="slots"></div>
     </div>
     <div class="panel">
-      <div class="tabs" role="tablist"><button class="tab" role="tab" data-v="inv" aria-selected="true" type="button">Sac</button><button class="tab" role="tab" data-v="boss" aria-selected="false" type="button">Boss</button><button class="tab" role="tab" data-v="log" aria-selected="false" type="button">Journal</button></div>
+      <div class="tabs" role="tablist"><button class="tab" role="tab" data-v="inv" aria-selected="true" type="button" data-t="bag">Sac</button><button class="tab" role="tab" data-v="boss" aria-selected="false" type="button" data-t="bossTab">Boss</button><button class="tab" role="tab" data-v="log" aria-selected="false" type="button" data-t="log">Journal</button></div>
       <div id="v-inv"><div class="inv" id="inv"></div></div>
       <div id="v-boss" hidden><div class="bosses" id="bossList"></div></div>
       <div id="v-log" hidden><div class="log" id="log"></div></div>
     </div>
   </div>
-  <div class="foot"><span>Prototype · les adversaires de l'arène sont contrôlés par l'ordinateur.</span><button class="linkbtn" id="resetBtn" type="button">Recommencer à zéro</button></div>
+  <div class="foot"><span data-t="foot">Prototype · les adversaires de l'arène sont contrôlés par l'ordinateur.</span><button class="linkbtn" id="resetBtn" type="button" data-t="reset">Recommencer à zéro</button></div>
 </div>
 
 <div class="modal" id="modal" hidden><div class="card" id="modalCard" role="dialog" aria-modal="true"></div></div>
@@ -162,24 +162,57 @@ const rnd=(a,b)=>a+Math.random()*(b-a), ri=(a,b)=>Math.floor(rnd(a,b+1)), pick=a
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+// =================== LANGUE (anglais par défaut, français si le navigateur est en français ; ?lang=xx pour forcer) ===================
+const LANG=(new URLSearchParams(location.search).get('lang')||navigator.language||'en').toLowerCase().startsWith('fr')?'fr':'en';
+document.documentElement.lang=LANG;
+const TX={
+fr:{title:"Arènes de Valdor",gold:"Or",wins:"Victoires",court:"Cour de Valdor",courtP:"Lancez un combat : votre héros se bat tout seul.",find:"Trouver un combat",findS:"Arène · adversaire de votre niveau",boss:"Affronter un boss",bossS:"Coffres et objets rares",
+  hero:"Héros",level:"Niveau",bag:"Sac",bossTab:"Boss",log:"Journal",foot:"Prototype · les adversaires de l'arène sont contrôlés par l'ordinateur.",reset:"Recommencer à zéro",
+  rar:["Commun","Peu commun","Rare","Épique","Légendaire"],slots:{weapon:"Arme",helm:"Casque",armor:"Armure",amulet:"Amulette"},stat:{atk:"Attaque",def:"Défense",hp:"Vie",spd:"Vitesse",crit:"Critique"},
+  bases:{weapon:{sword:["Épée rouillée","Épée de fer","Épée d'acier","Lame runique","Lame de Valdor"],axe:["Hachette ébréchée","Hache de bûcheron","Hache de guerre","Hache runique","Hache des rois"],hammer:["Gourdin noueux","Masse de fer","Marteau d'armes","Marteau runique","Marteau du tonnerre"],flail:["Fléau rouillé","Fléau de fer","Fléau d'acier","Fléau runique","Fléau de Valdor"]},
+    helm:["Capuche de cuir","Casque de fer","Heaume d'acier","Heaume runique","Couronne de Valdor"],armor:["Tunique usée","Cotte de mailles","Plastron d'acier","Armure runique","Armure de Valdor"],amulet:["Pendentif de bois","Amulette de cuivre","Talisman d'argent","Amulette runique","Cœur de Valdor"]},
+  suffix:["","du loup","de braise","des anciens","du roi déchu"],
+  bossN:{gob:["Grokk, chef gobelin","Petit, vif et sournois."],troll:["Troll des marais","Encaisse énormément de coups."],spectre:["Chevalier spectral","Frappe vite, esquive souvent."],dragon:["Ignaros, dragon de braise","Crache du feu sous 50 % de vie."]},
+  you:"Vous",lv:"niv.",parried:"Paré",crit:"CRITIQUE",dodge:"ESQUIVE",enraged:"ENRAGÉ !",fireBreath:"SOUFFLE DE FEU !",
+  lvlUp:l=>`Niveau ${l} atteint !`,winVs:(n,x,g)=>`Victoire contre <b>${n}</b> (+${x} XP, +${g} or)`,loseVs:(n,x)=>`Défaite contre <b>${n}</b> (+${x} XP)`,bossWin:n=>`<b>${n}</b> vaincu ! Un coffre vous attend.`,bossLose:n=>`Défaite face à <b>${n}</b>.`,
+  victory:"Victoire !",defeat:"Défaite",xp:"Expérience",levelL:"Niveau",loot:"Butin trouvé :",openChest:"Ouvrir le coffre",cont:"Continuer",chestOf:n=>`Coffre de ${n}`,chestShakes:"Le coffre tremble…",store:"Ranger dans le sac",
+  searching:"Recherche d'un adversaire…",arena:"Arène de Valdor",oppInfo:(l,p)=>`Niveau ${l} · puissance ${p}`,cmp:sl=>`Comparé à votre ${sl.toLowerCase()} actuel :`,close:"Fermer",equip:"Équiper",sell:p=>`Vendre ${p} or`,
+  equipped:(n,d)=>`Équipé : <b>${n}</b> (puissance ${d})`,power:p=>`Puissance ${p}`,emptyBag:"Votre sac est vide. Gagnez des combats pour trouver de l'équipement.",beaten:n=>` · vaincu ${n}×`,fightB:"Combattre",noLog:"Aucun combat pour l'instant.",
+  resetQ:"Recommencer à zéro ?",resetP:"Votre héros, son équipement et son or seront effacés.",erase:"Effacer",cancel:"Annuler",
+  tut1:"Bienvenue dans les Arènes de Valdor ! Votre héros se bat tout seul : appuyez sur « Trouver un combat ».",tut2:"Bravo ! Ouvrez votre sac et équipez l'objet trouvé pour devenir plus fort.",tutOk:"Compris"},
+en:{title:"Valdor Arenas",gold:"Gold",wins:"Wins",court:"Valdor Courtyard",courtP:"Start a fight: your hero battles on their own.",find:"Find a fight",findS:"Arena · opponent of your level",boss:"Fight a boss",bossS:"Chests and rare items",
+  hero:"Hero",level:"Level",bag:"Bag",bossTab:"Bosses",log:"Log",foot:"Prototype · arena opponents are controlled by the computer.",reset:"Start over",
+  rar:["Common","Uncommon","Rare","Epic","Legendary"],slots:{weapon:"Weapon",helm:"Helmet",armor:"Armor",amulet:"Amulet"},stat:{atk:"Attack",def:"Defense",hp:"Health",spd:"Speed",crit:"Critical"},
+  bases:{weapon:{sword:["Rusty Sword","Iron Sword","Steel Sword","Runic Blade","Blade of Valdor"],axe:["Chipped Hatchet","Woodcutter's Axe","War Axe","Runic Axe","Axe of Kings"],hammer:["Knotty Club","Iron Mace","War Hammer","Runic Hammer","Thunder Hammer"],flail:["Rusty Flail","Iron Flail","Steel Flail","Runic Flail","Flail of Valdor"]},
+    helm:["Leather Hood","Iron Helmet","Steel Helm","Runic Helm","Crown of Valdor"],armor:["Worn Tunic","Chainmail","Steel Breastplate","Runic Armor","Armor of Valdor"],amulet:["Wooden Pendant","Copper Amulet","Silver Talisman","Runic Amulet","Heart of Valdor"]},
+  suffix:["","of the Wolf","of Embers","of the Ancients","of the Fallen King"],
+  bossN:{gob:["Grokk, Goblin Chief","Small, quick and sneaky."],troll:["Swamp Troll","Takes a huge beating."],spectre:["Spectral Knight","Strikes fast, dodges often."],dragon:["Ignaros, Ember Dragon","Breathes fire below 50% health."]},
+  you:"You",lv:"lv.",parried:"Blocked",crit:"CRITICAL",dodge:"DODGE",enraged:"ENRAGED!",fireBreath:"FIRE BREATH!",
+  lvlUp:l=>`Level ${l} reached!`,winVs:(n,x,g)=>`Victory against <b>${n}</b> (+${x} XP, +${g} gold)`,loseVs:(n,x)=>`Defeat against <b>${n}</b> (+${x} XP)`,bossWin:n=>`<b>${n}</b> defeated! A chest awaits.`,bossLose:n=>`Defeated by <b>${n}</b>.`,
+  victory:"Victory!",defeat:"Defeat",xp:"Experience",levelL:"Level",loot:"Loot found:",openChest:"Open the chest",cont:"Continue",chestOf:n=>`${n}'s chest`,chestShakes:"The chest is shaking…",store:"Put in bag",
+  searching:"Looking for an opponent…",arena:"Valdor Arena",oppInfo:(l,p)=>`Level ${l} · power ${p}`,cmp:sl=>`Compared to your current ${sl.toLowerCase()}:`,close:"Close",equip:"Equip",sell:p=>`Sell for ${p} gold`,
+  equipped:(n,d)=>`Equipped: <b>${n}</b> (power ${d})`,power:p=>`Power ${p}`,emptyBag:"Your bag is empty. Win fights to find gear.",beaten:n=>` · defeated ${n}×`,fightB:"Fight",noLog:"No fights yet.",
+  resetQ:"Start over?",resetP:"Your hero, gear and gold will be erased.",erase:"Erase",cancel:"Cancel",
+  tut1:"Welcome to the Valdor Arenas! Your hero fights on their own: tap “Find a fight”.",tut2:"Well done! Open your bag and equip the item you found to get stronger.",tutOk:"Got it"}
+}[LANG];
+const tr=(k,...a)=>typeof TX[k]==="function"?TX[k](...a):TX[k];
+
 // =================== DONNÉES ===================
-const RAR=[{n:"Commun",c:"#a7a3a0",m:1},{n:"Peu commun",c:"#5fc46d",m:1.25},{n:"Rare",c:"#4f8fe8",m:1.55},{n:"Épique",c:"#b267f0",m:1.9},{n:"Légendaire",c:"#ff9b2e",m:2.4}];
-const SLOTS={weapon:"Arme",helm:"Casque",armor:"Armure",amulet:"Amulette"};
+const RAR=[{c:"#a7a3a0",m:1},{c:"#5fc46d",m:1.25},{c:"#4f8fe8",m:1.55},{c:"#b267f0",m:1.9},{c:"#ff9b2e",m:2.4}].map((r,i)=>Object.assign(r,{n:TX.rar[i]}));
+const SLOTS=TX.slots;
 const BASES={
   weapon:{sword:["Épée rouillée","Épée de fer","Épée d'acier","Lame runique","Lame de Valdor"],axe:["Hachette ébréchée","Hache de bûcheron","Hache de guerre","Hache runique","Hache des rois"],hammer:["Gourdin noueux","Masse de fer","Marteau d'armes","Marteau runique","Marteau du tonnerre"],flail:["Fléau rouillé","Fléau de fer","Fléau d'acier","Fléau runique","Fléau de Valdor"]},
   helm:["Capuche de cuir","Casque de fer","Heaume d'acier","Heaume runique","Couronne de Valdor"],
   armor:["Tunique usée","Cotte de mailles","Plastron d'acier","Armure runique","Armure de Valdor"],
   amulet:["Pendentif de bois","Amulette de cuivre","Talisman d'argent","Amulette runique","Cœur de Valdor"]
 };
-const SUFFIX=["","du loup","de braise","des anciens","du roi déchu"];
-const STAT_N={atk:"Attaque",def:"Défense",hp:"Vie",spd:"Vitesse",crit:"Critique"};
+const SUFFIX=TX.suffix;
+function itemName(it){if(it.tier===undefined)return it.name;const b=it.slot==="weapon"?TX.bases.weapon[it.type][it.tier]:TX.bases[it.slot][it.tier];return it.rar>=2?b+" "+SUFFIX[it.rar]:b}
+const STAT_N=TX.stat;
 const NAMES=["Aldric","Brunehilde","Garen le Gris","Isolde","Thibault Croc-d'Acier","Morgane","Eudes le Brave","Sigrid","Bertrand","Ysolde","Gauvain","Mahaut","Roland","Aénor","Hugues Main-Noire","Clothilde","Tancrède","Ermengarde","Baudouin","Mélisende"];
 const BOSSES=[
-  {id:"gob",n:"Grokk, chef gobelin",lvl:3,kind:"goblin",arena:"forest",desc:"Petit, vif et sournois."},
-  {id:"troll",n:"Troll des marais",lvl:6,kind:"troll",arena:"swamp",desc:"Encaisse énormément de coups."},
-  {id:"spectre",n:"Chevalier spectral",lvl:10,kind:"spectre",arena:"crypt",desc:"Frappe vite, esquive souvent."},
-  {id:"dragon",n:"Ignaros, dragon de braise",lvl:15,kind:"dragon",arena:"volcano",desc:"Crache du feu sous 50 % de vie."}
-];
+  {id:"gob",lvl:3,kind:"goblin",arena:"forest"},{id:"troll",lvl:6,kind:"troll",arena:"swamp"},{id:"spectre",lvl:10,kind:"spectre",arena:"crypt"},{id:"dragon",lvl:15,kind:"dragon",arena:"volcano"}
+].map(b=>Object.assign(b,{n:TX.bossN[b.id][0],desc:TX.bossN[b.id][1]}));
 const ARENAS={
   court:{sky:0x2a2344,fog:0x2a2344,floor:["#5b5560","#4d4752"],wall:0x6a6270,light:0xffa050,amb:0x6a5a8a,ember:0xff8a3a},
   forest:{sky:0x1d3324,fog:0x1d3324,floor:["#3f5a2f","#35502a"],wall:0x3a4a2e,light:0xffcc66,amb:0x4d6a4a,ember:0xc8ff6a},
@@ -200,15 +233,14 @@ if(!S.equip.weapon){S.equip.weapon=makeItem("weapon",1,0,"sword");S.equip.armor=
 function makeItem(slot,ilvl,rar,wtype){
   const tier=clamp(Math.floor((ilvl-1)/4),0,4);
   let name,type=null;
-  if(slot==="weapon"){type=wtype||pick(["sword","axe","hammer","flail"]);name=BASES.weapon[type][tier]}else name=BASES[slot][tier];
-  if(rar>=2)name+=" "+SUFFIX[rar];
+  if(slot==="weapon")type=wtype||pick(["sword","axe","hammer","flail"]);
   const m=RAR[rar].m,st={};
   if(slot==="weapon"){st.atk=Math.round((4+ilvl*2.2)*m*(type==="hammer"?1.15:type==="axe"?1.05:type==="flail"?1.1:1));if(type==="sword")st.spd=Math.round(1+rar)}
   if(slot==="helm"){st.def=Math.round((1+ilvl*.8)*m);st.hp=Math.round((6+ilvl*4)*m)}
   if(slot==="armor"){st.hp=Math.round((12+ilvl*8)*m);st.def=Math.round((2+ilvl*1.1)*m)}
   if(slot==="amulet"){st.crit=Math.round((2+ilvl*.35)*m);st.spd=Math.round((1+ilvl*.25)*m)}
   if(rar>=1){const extra=pick(["atk","def","hp","spd","crit"]);st[extra]=(st[extra]||0)+Math.round((extra==="hp"?5+ilvl*3:1+ilvl*.4)*rar*.6)}
-  return {id:S?S.uid++:0,slot,type,ilvl,rar,name,st,isNew:true};
+  const it={id:S?S.uid++:0,slot,type,ilvl,rar,tier,st,isNew:true};it.name=itemName(it);return it;
 }
 function rollRar(w){let t=w.reduce((a,b)=>a+b,0),r=Math.random()*t;for(let i=0;i<w.length;i++){if((r-=w[i])<0)return i}return 0}
 function sellPrice(it){return Math.round((5+it.ilvl*3)*RAR[it.rar].m*(1+it.rar))}
@@ -624,7 +656,7 @@ function startFight(A,B,meta){
   play(A,[{p:"crouch",d:.01},{p:"stance",d:.5,e:"back"}],true);
   if(B.kind!=="dragon")play(B,[{p:"crouch",d:.01},{p:"stance",d:.5,e:"back"}],true);
   $('bars').hidden=false;$('msg').hidden=true;$('speed').hidden=false;
-  $('nmA').textContent=`${A.name} · niv. ${A.lvl}`;$('nmB').textContent=`${B.name} · niv. ${B.lvl}`;
+  $('nmA').textContent=`${A.name} · ${tr("lv")} ${A.lvl}`;$('nmB').textContent=`${B.name} · ${tr("lv")} ${B.lvl}`;
   setHp();lock(true);
 }
 function setHp(){for(const [k,F] of [["A",fight.A],["B",fight.B]]){const w=Math.max(0,F.hp/F.max*100)+"%";$('hp'+k).style.width=w;$('hp'+k+'u').style.width=w}}
@@ -647,18 +679,18 @@ function land(att,def,o,heavy,launch){
   if(o.kind==="block"){
     SFX.clang();sparks(ix-def.face*10,iy-10,"#ffe08a",18,dir+Math.PI,620);burstStar(ix,iy-10,"#fff",false);hitStop=.07;shake.p=5;
     play(def,[{p:"block",d:.06},{p:"stance",d:.35,dx:-26,e:"out"}],true);
-    def.hp-=o.dmg;dmgText(ix,iy-60,"Paré -"+o.dmg,"#bfe3ff",false);
+    def.hp-=o.dmg;dmgText(ix,iy-60,tr("parried")+" -"+o.dmg,"#bfe3ff",false);
   }else{
     def.hp-=o.dmg;def.flash=.09;
     o.crit?SFX.crit():SFX.hit();
     sparks(ix,iy,o.crit?"#ffd24a":col,o.crit?30:16,dir,o.crit?820:560);burstStar(ix,iy,o.crit?"#ffd24a":"#fff",o.crit||heavy);ring(ix,iy,o.crit?"#ffd24a":"#fff",o.crit?60:36);
     hitStop=o.crit?.13:heavy?.1:.06;shake.p=o.crit?13:heavy?10:5;punch(o.crit?1.12:1.06,ix,iy);if(o.crit)flashA=.35;
-    dmgText(ix,iy-70,(o.crit?"CRITIQUE  ":"")+"-"+o.dmg,o.crit?"#ffd24a":"#ffffff",o.crit||heavy);
+    dmgText(ix,iy-70,(o.crit?tr("crit")+"  ":"")+"-"+o.dmg,o.crit?"#ffd24a":"#ffffff",o.crit||heavy);
     if(def.kind==="dragon"){play(def,[{p:"dHit",d:.08},{p:"dIdle",d:.5,dx:-20}],true)}
     else if(launch){play(def,[{p:"airTumble",d:.12,air:150,dx:-60,e:"out"},{p:"airTumble",d:.38,air:175,dx:-20,spin:-1.4,e:"out"}],true)}
     else if(heavy){play(def,[{p:"hitH",d:.08,dx:-70,e:"out"},{p:"hitH",d:.18,dx:-20},{p:"stance",d:.45,e:"io"}],true);dust(def.x,GROUND,10,-def.face)}
     else play(def,[{p:"hitL",d:.07,dx:-30,e:"out"},{p:"stance",d:.35,e:"io"}],true);
-    if(!def.enraged&&def.kind&&def.hp<def.max*.5){def.enraged=true;setTimeout(()=>dmgText(def.x,GROUND-260,def.kind==="dragon"?"SOUFFLE DE FEU !":"ENRAGÉ !","#ff6a2b",true),250)}
+    if(!def.enraged&&def.kind&&def.hp<def.max*.5){def.enraged=true;setTimeout(()=>dmgText(def.x,GROUND-260,def.kind==="dragon"?tr("fireBreath"):tr("enraged"),"#ff6a2b",true),250)}
   }
   setHp();
   if(def.hp<=0)finish(att,def,ix,iy);
@@ -717,7 +749,7 @@ const MOVES={
   fire(att,def){const o=outcome(att,def,1.25,true);
     return [{p:"dRear",d:.3,start:()=>SFX.roar()},{p:"dFire",d:.6,start:F=>{F.firing=1;SFX.fire();if(o.kind==="dodge")dodge(def,att)},on:F=>{F.firing=0;land(att,def,o,true)}},{p:"dIdle",d:.4}]}
 };
-function dodge(def,att){if(def.kind==="dragon")return;SFX.dodge();play(def,[{p:"tuck",d:.3,air:120,dx:-120,spin:-Math.PI*2,ghost:1,e:"out"},{p:"crouch",d:.14,air:0,ea:"in",on:F=>dust(F.x,GROUND,6,0)},{p:"stance",d:.3,toX:()=>def.home,e:"io"}],true);setTimeout(()=>dmgText(def.x,GROUND-230,"ESQUIVE","#bfe3ff",true),120)}
+function dodge(def,att){if(def.kind==="dragon")return;SFX.dodge();play(def,[{p:"tuck",d:.3,air:120,dx:-120,spin:-Math.PI*2,ghost:1,e:"out"},{p:"crouch",d:.14,air:0,ea:"in",on:F=>dust(F.x,GROUND,6,0)},{p:"stance",d:.3,toX:()=>def.home,e:"io"}],true);setTimeout(()=>dmgText(def.x,GROUND-230,tr("dodge"),"#bfe3ff",true),120)}
 function chooseMove(F){
   if(F.kind==="dragon")return F.enraged&&Math.random()<.55?"fire":Math.random()<.3?"fire":"bite";
   if(F.kind==="spectre")return pick(["blink","blink","combo","dash"]);
@@ -804,39 +836,39 @@ const idleHero={look:heroLook(),kind:null,face:1,x:VW/2,air:0,pose:Object.assign
 
 // =================== RÉCOMPENSES ===================
 function addLog(html){S.log.unshift(html);S.log=S.log.slice(0,40)}
-function gainXp(x){S.xp+=x;let up=false;while(S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;up=true}if(up){SFX.lvl();addLog(`<b>Niveau ${S.lvl} atteint !</b>`)}return up}
+function gainXp(x){S.xp+=x;let up=false;while(S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;up=true}if(up){SFX.lvl();addLog(`<b>${tr("lvlUp",S.lvl)}</b>`)}return up}
 function rewards(won,m){
   let xp,gold,item=null,html="";
   if(m.type==="arena"){
     xp=won?18+S.lvl*6:Math.round((18+S.lvl*6)*.35);gold=won?ri(8,14)+S.lvl*3:ri(2,5);
     if(won&&Math.random()<.4)item=makeItem(pick(Object.keys(SLOTS)),S.lvl+ri(-1,1)<1?1:S.lvl+ri(-1,1),rollRar([60,27,10,3,0]));
     if(won)S.wins++;else S.losses++;
-    addLog(won?`Victoire contre <b>${esc(fight.B.name)}</b> (+${xp} XP, +${gold} or)`:`Défaite contre <b>${esc(fight.B.name)}</b> (+${xp} XP)`);
+    addLog(won?tr("winVs",esc(fight.B.name),xp,gold):tr("loseVs",esc(fight.B.name),xp));
   }else{
     xp=won?40+m.boss.lvl*12:Math.round((40+m.boss.lvl*12)*.25);gold=won?30+m.boss.lvl*10:0;
-    if(won){S.bossWins[m.boss.id]=(S.bossWins[m.boss.id]||0)+1;addLog(`<b>${esc(m.boss.n)}</b> vaincu ! Un coffre vous attend.`)}else addLog(`Défaite face à <b>${esc(m.boss.n)}</b>.`);
+    if(won){S.bossWins[m.boss.id]=(S.bossWins[m.boss.id]||0)+1;addLog(tr("bossWin",esc(m.boss.n)))}else addLog(tr("bossLose",esc(m.boss.n)));
   }
   S.gold+=gold;const up=gainXp(xp);if(item)S.bag.push(item);save();render();
-  html=`<h2 class="px" style="color:${won?'var(--gold)':'var(--blood)'}">${won?'Victoire !':'Défaite'}</h2>
-    <div class="cmp"><div><span>Expérience</span><b>+${xp} XP</b></div>${gold?`<div><span>Or</span><b>+${gold}</b></div>`:''}${up?`<div><span>Niveau</span><b class="up">${S.lvl} !</b></div>`:''}</div>
-    ${item?`<p>Butin trouvé :</p>${itemBlock(item)}`:''}
-    <div class="row">${m.type==="boss"&&won?`<button class="btn" id="openChest" type="button">Ouvrir le coffre</button>`:`<button class="btn" id="closeM" type="button">Continuer</button>`}</div>`;
+  html=`<h2 class="px" style="color:${won?'var(--gold)':'var(--blood)'}">${won?tr('victory'):tr('defeat')}</h2>
+    <div class="cmp"><div><span>${tr("xp")}</span><b>+${xp} XP</b></div>${gold?`<div><span>${tr("gold")}</span><b>+${gold}</b></div>`:''}${up?`<div><span>${tr("levelL")}</span><b class="up">${S.lvl} !</b></div>`:''}</div>
+    ${item?`<p>${tr("loot")}</p>${itemBlock(item)}`:''}
+    <div class="row">${m.type==="boss"&&won?`<button class="btn" id="openChest" type="button">${tr("openChest")}</button>`:`<button class="btn" id="closeM" type="button">${tr("cont")}</button>`}</div>`;
   showModal(html);
   if(item)SFX.coin();
   const oc=$('openChest');if(oc)oc.onclick=()=>chest(m.boss);
   const cm=$('closeM');if(cm)cm.onclick=closeFight;
 }
-function closeFight(){hideModal();fight=null;$('bars').hidden=true;$('speed').hidden=true;$('msg').hidden=false;$('msgT').textContent="Cour de Valdor";$('msgP').textContent="Lancez un combat : votre héros se bat tout seul.";buildArena("court");lock(false)}
+function closeFight(){hideModal();fight=null;$('bars').hidden=true;$('speed').hidden=true;$('msg').hidden=false;$('msgT').textContent=tr("court");$('msgP').textContent=tr("courtP");tutorial();buildArena("court");lock(false)}
 function chest(boss){
   const tier=BOSSES.indexOf(boss);
   const items=[];const n=2+(Math.random()<.35?1:0);
   for(let i=0;i<n;i++)items.push(makeItem(pick(Object.keys(SLOTS)),Math.max(boss.lvl,S.lvl)+ri(0,1),rollRar([Math.max(0,25-tier*8),38,26+tier*3,9+tier*3,2+tier*2])));
-  showModal(`<div class="chest"><h2 class="px">Coffre de ${esc(boss.n.split(',')[0])}</h2><canvas id="chestCv" width="32" height="32" class="shake"></canvas><p>Le coffre tremble…</p></div>`);
+  showModal(`<div class="chest"><h2 class="px">${tr("chestOf",esc(boss.n.split(",")[0]))}</h2><canvas id="chestCv" width="32" height="32" class="shake"></canvas><p>${tr("chestShakes")}</p></div>`);
   const cv=$('chestCv'),c=cv.getContext('2d');drawChest(c,false);
   setTimeout(()=>{SFX.chest();drawChest(c,true);cv.classList.remove('shake');
     items.forEach(it=>S.bag.push(it));save();render();
     const best=Math.max(...items.map(i=>i.rar));
-    showModal(`<div class="chest"><h2 class="px" style="color:${RAR[best].c}">${RAR[best].n} !</h2></div>${items.map(itemBlock).join('')}<div class="row"><button class="btn" id="closeM" type="button">Ranger dans le sac</button></div>`);
+    showModal(`<div class="chest"><h2 class="px" style="color:${RAR[best].c}">${RAR[best].n} !</h2></div>${items.map(itemBlock).join('')}<div class="row"><button class="btn" id="closeM" type="button">${tr("store")}</button></div>`);
     $('closeM').onclick=closeFight;
   },1300);
 }
@@ -844,18 +876,18 @@ function drawChest(c,open){c.clearRect(0,0,32,32);px(c,4,14,24,14,"#7a4a22");px(
   if(open){px(c,4,6,24,6,"#8a5a2a");px(c,4,6,24,1,"#c9a050");for(let i=0;i<9;i++)px(c,8+i*2,4-(i%3),1,3,"#ffe08a")}else{px(c,4,9,24,6,"#8a5a2a");px(c,4,9,24,1,"#c9a050")}}
 
 // =================== LANCEMENT DES COMBATS ===================
-function hero(){return mkFighter("Vous",S.lvl,heroStats(),heroLook(),null)}
+function hero(){return mkFighter(tr("you"),S.lvl,heroStats(),heroLook(),null)}
 $('findBtn').onclick=()=>{
-  audio();lock(true);$('msgT').textContent="Recherche d'un adversaire…";$('msgP').textContent="Arène de Valdor";
+  audio();lock(true);$('msgT').textContent=tr("searching");$('msgP').textContent=tr("arena");
   setTimeout(()=>{
     const lvl=Math.max(1,S.lvl+ri(-1,1)),hs=heroStats(),k=.82+Math.random()*.3+(lvl-S.lvl)*.06;
     const st={hp:Math.round(hs.hp*k),atk:Math.round(hs.atk*k),def:Math.round(hs.def*k),spd:Math.round(hs.spd*rnd(.9,1.1)),crit:Math.round(hs.crit*rnd(.7,1.3))};
     const B=mkFighter(pick(NAMES),lvl,st,randomLook(lvl),null);
-    $('msgT').textContent=`${B.name}`;$('msgP').textContent=`Niveau ${lvl} · puissance ${power(st)}`;
+    $('msgT').textContent=`${B.name}`;$('msgP').textContent=tr("oppInfo",lvl,power(st));
     setTimeout(()=>startFight(hero(),B,{type:"arena",arena:"court"}),900);
   },1200);
 };
-function bossStats(b){const L=b.lvl,base={hp:(100+L*24),atk:8+L*2.5,def:2+L*1,spd:10+L*.15,crit:6};
+function bossStats(b){const L=b.lvl,base={hp:122+L*32.8,atk:9.1+L*3.44,def:2.55+L*1.27,spd:10+L*.15,crit:6};// réglé avec valdor/tools/sim.js
   const mod={goblin:{hp:.8,atk:.95,spd:1.35},troll:{hp:1.6,atk:1,spd:.75,def:1.25},spectre:{hp:1,atk:1.1,spd:1.4},dragon:{hp:1.9,atk:1.1,def:1.2,spd:.9}}[b.kind];
   for(const k in mod)base[k]*=mod[k];for(const k in base)base[k]=Math.round(base[k]);return base}
 function fightBoss(b){audio();const B=mkFighter(b.n.split(',')[0],b.lvl,bossStats(b),null,b.kind);startFight(hero(),B,{type:"boss",boss:b,arena:b.arena})}
@@ -867,18 +899,18 @@ function showModal(html){$('modalCard').innerHTML=html;$('modal').hidden=false;$
 function hideModal(){$('modal').hidden=true}
 $('modal').addEventListener('click',e=>{if(e.target===$('modal')&&!fight)hideModal()});
 function statLines(it){return Object.entries(it.st).map(([k,v])=>`<div><span>${STAT_N[k]}</span><b>+${v}${k==="crit"?" %":""}</b></div>`).join('')}
-function itemBlock(it){return `<div class="itemhead"><div class="ic" style="border-color:${RAR[it.rar].c}"><img src="${icon(it)}" alt=""></div><div><div class="px">${esc(it.name)}</div><div class="rar" style="color:${RAR[it.rar].c}">${RAR[it.rar].n} · ${SLOTS[it.slot]} · niv. ${it.ilvl}</div></div></div><div class="cmp">${statLines(it)}</div>`}
+function itemBlock(it){return `<div class="itemhead"><div class="ic" style="border-color:${RAR[it.rar].c}"><img src="${icon(it)}" alt=""></div><div><div class="px">${esc(itemName(it))}</div><div class="rar" style="color:${RAR[it.rar].c}">${RAR[it.rar].n} · ${SLOTS[it.slot]} · ${tr("lv")} ${it.ilvl}</div></div></div><div class="cmp">${statLines(it)}</div>`}
 function openItem(it,equipped){
   it.isNew=false;save();
   const cur=S.equip[it.slot];
   let cmp="";
   if(!equipped&&cur){const keys=new Set([...Object.keys(it.st),...Object.keys(cur.st)]);
-    cmp=`<p style="margin:0;color:var(--muted)">Comparé à votre ${SLOTS[it.slot].toLowerCase()} actuel :</p><div class="cmp">`+[...keys].map(k=>{const d=(it.st[k]||0)-(cur.st[k]||0);return `<div><span>${STAT_N[k]}</span><b class="${d>0?'up':d<0?'down':''}">${d>0?'+':''}${d}</b></div>`}).join('')+`</div>`}
+    cmp=`<p style="margin:0;color:var(--muted)">${tr("cmp",SLOTS[it.slot])}</p><div class="cmp">`+[...keys].map(k=>{const d=(it.st[k]||0)-(cur.st[k]||0);return `<div><span>${STAT_N[k]}</span><b class="${d>0?'up':d<0?'down':''}">${d>0?'+':''}${d}</b></div>`}).join('')+`</div>`}
   const pBefore=power(heroStats());
-  showModal(itemBlock(it)+cmp+`<div class="row">${equipped?`<button class="btn dark" id="iClose" type="button">Fermer</button>`:`<button class="btn" id="iEquip" type="button">Équiper</button><button class="btn dark" id="iSell" type="button">Vendre ${sellPrice(it)} or</button>`}</div>`);
+  showModal(itemBlock(it)+cmp+`<div class="row">${equipped?`<button class="btn dark" id="iClose" type="button">${tr("close")}</button>`:`<button class="btn" id="iEquip" type="button">${tr("equip")}</button><button class="btn dark" id="iSell" type="button">${tr("sell",sellPrice(it))}</button>`}</div>`);
   if(equipped){$('iClose').onclick=hideModal;return}
   $('iEquip').onclick=()=>{S.bag=S.bag.filter(x=>x!==it);if(cur)S.bag.push(cur);S.equip[it.slot]=it;save();render();hideModal();
-    const d=power(heroStats())-pBefore;addLog(`Équipé : <b>${esc(it.name)}</b> (puissance ${d>=0?'+':''}${d})`);render()};
+    const d=power(heroStats())-pBefore;addLog(tr("equipped",esc(itemName(it)),(d>=0?"+":"")+d));render()};
   $('iSell').onclick=()=>{S.bag=S.bag.filter(x=>x!==it);S.gold+=sellPrice(it);SFX.coin();save();render();hideModal()};
 }
 
@@ -888,13 +920,13 @@ function render(){
   $('gold').textContent=S.gold;$('wins').textContent=S.wins;$('lvl').textContent=S.lvl;
   $('xpbar').style.width=(S.xp/xpNeed(S.lvl)*100)+"%";$('xpt').textContent=`${S.xp} / ${xpNeed(S.lvl)} XP`;
   $('stats').innerHTML=Object.entries(STAT_N).map(([k,n])=>`<div><span>${n}</span><b>${s[k]}${k==="crit"?" %":""}</b></div>`).join('');
-  $('power').textContent=`Puissance ${power(s)}`;
-  $('slots').innerHTML=Object.entries(SLOTS).map(([k,n])=>{const it=S.equip[k];return it?`<button class="slot r${it.rar}" data-eq="${k}" type="button" aria-label="${esc(it.name)}"><img src="${icon(it)}" alt=""><span class="lab">${n}</span></button>`:`<div class="slot empty"><span class="lab">${n}</span></div>`}).join('');
+  $('power').textContent=tr("power",power(s));
+  $('slots').innerHTML=Object.entries(SLOTS).map(([k,n])=>{const it=S.equip[k];return it?`<button class="slot r${it.rar}" data-eq="${k}" type="button" aria-label="${esc(itemName(it))}"><img src="${icon(it)}" alt=""><span class="lab">${n}</span></button>`:`<div class="slot empty"><span class="lab">${n}</span></div>`}).join('');
   const bag=[...S.bag].sort((a,b)=>b.rar-a.rar||b.ilvl-a.ilvl);
-  $('inv').innerHTML=bag.length?bag.map(it=>`<button class="cell r${it.rar}" data-id="${it.id}" type="button" aria-label="${esc(it.name)}"><img src="${icon(it)}" alt="">${it.isNew?'<span class="new">NEW</span>':''}</button>`).join(''):`<p class="empty-inv">Votre sac est vide. Gagnez des combats pour trouver de l'équipement.</p>`;
-  $('bossList').innerHTML=BOSSES.map(b=>{const ok=S.lvl>=b.lvl-2;return `<div class="boss"><canvas width="56" height="56" data-boss="${b.id}"></canvas><div><h3>${esc(b.n)}</h3><p>Niv. ${b.lvl} · ${esc(b.desc)}${S.bossWins[b.id]?` · vaincu ${S.bossWins[b.id]}×`:''}</p></div><button class="btn" type="button" data-fight="${b.id}" ${ok&&!fight?'':'disabled'}>${ok?'Combattre':'Niv. '+(b.lvl-2)}</button></div>`}).join('');
+  $('inv').innerHTML=bag.length?bag.map(it=>`<button class="cell r${it.rar}" data-id="${it.id}" type="button" aria-label="${esc(itemName(it))}"><img src="${icon(it)}" alt="">${it.isNew?'<span class="new">NEW</span>':''}</button>`).join(''):`<p class="empty-inv">${tr("emptyBag")}</p>`;
+  $('bossList').innerHTML=BOSSES.map(b=>{const ok=S.lvl>=b.lvl-2;return `<div class="boss"><canvas width="56" height="56" data-boss="${b.id}"></canvas><div><h3>${esc(b.n)}</h3><p>${tr("lv")} ${b.lvl} · ${esc(b.desc)}${S.bossWins[b.id]?tr("beaten",S.bossWins[b.id]):''}</p></div><button class="btn" type="button" data-fight="${b.id}" ${ok&&!fight?'':'disabled'}>${ok?tr('fightB'):tr('lv')+' '+(b.lvl-2)}</button></div>`}).join('');
   document.querySelectorAll('canvas[data-boss]').forEach(cv=>{const b=BOSSES.find(x=>x.id===cv.dataset.boss),c=cv.getContext('2d');c.clearRect(0,0,56,56);if(b.kind==="dragon")drawStatic(c,null,"dragon",-14,52,.2);else drawStatic(c,null,b.kind,28,54,b.kind==="troll"?.18:b.kind==="goblin"?.32:.24)});
-  $('log').innerHTML=S.log.length?S.log.map(l=>`<div>${l}</div>`).join(''):'<div>Aucun combat pour l\'instant.</div>';
+  $('log').innerHTML=S.log.length?S.log.map(l=>`<div>${l}</div>`).join(''):`<div>${tr('noLog')}</div>`;
   const pc=$('portrait').getContext('2d');pc.clearRect(0,0,96,96);drawStatic(pc,heroLook(),null,46,92,.44);
 }
 $('slots').addEventListener('click',e=>{const b=e.target.closest('[data-eq]');if(b)openItem(S.equip[b.dataset.eq],true)});
@@ -902,11 +934,18 @@ $('inv').addEventListener('click',e=>{const b=e.target.closest('[data-id]');if(!
 $('bossList').addEventListener('click',e=>{const b=e.target.closest('[data-fight]');if(b&&!b.disabled)fightBoss(BOSSES.find(x=>x.id===b.dataset.fight))});
 function selectTab(v){document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));for(const k of ["inv","boss","log"])$('v-'+k).hidden=k!==v}
 document.querySelector('.tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(t)selectTab(t.dataset.v)});
-$('resetBtn').onclick=()=>{showModal(`<h2 class="px">Recommencer à zéro ?</h2><p>Votre héros, son équipement et son or seront effacés.</p><div class="row"><button class="btn" id="rYes" type="button">Effacer</button><button class="btn dark" id="rNo" type="button">Annuler</button></div>`);
+$('resetBtn').onclick=()=>{showModal(`<h2 class="px">${tr("resetQ")}</h2><p>${tr("resetP")}</p><div class="row"><button class="btn" id="rYes" type="button">${tr("erase")}</button><button class="btn dark" id="rNo" type="button">${tr("cancel")}</button></div>`);
   $('rYes').onclick=()=>{S=freshSave();S.equip.weapon=makeItem("weapon",1,0,"sword");S.equip.armor=makeItem("armor",1,0);save();render();hideModal()};$('rNo').onclick=hideModal};
 
+// =================== TUTORIEL ===================
+function tutorial(){
+  if(!S.tut)S.tut=0;
+  if(S.tut===0&&S.wins===0&&S.losses===0){S.tut=1;save();showModal(`<h2 class="px">${tr("title")}</h2><p>${tr("tut1")}</p><div class="row"><button class="btn" id="tOk" type="button">${tr("tutOk")}</button></div>`);$('tOk').onclick=()=>{hideModal();$('findBtn').focus()};return}
+  if(S.tut===1&&S.bag.length){S.tut=2;save();selectTab("inv");showModal(`<p>${tr("tut2")}</p><div class="row"><button class="btn" id="tOk" type="button">${tr("tutOk")}</button></div>`);$('tOk').onclick=()=>{hideModal();$('v-inv').scrollIntoView({behavior:"smooth",block:"center"})}}
+}
 // =================== BOUCLE ===================
-buildArena("court");render();
+document.title=tr("title");document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=tr(el.dataset.t)});
+buildArena("court");render();tutorial();
 let last=performance.now();
 sizeFx();
 function loop(t){const raw=Math.min(.05,(t-last)/1000);last=t;
