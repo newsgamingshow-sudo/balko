@@ -1,4 +1,4 @@
-# L'Écho des Profondeurs (prototype v9)
+# L'Écho des Profondeurs (prototype v10)
 
 Prototype jouable d'un dungeon crawler en vue FPS : dark fantasy, rendu 3D pixelisé, horreur sonore.
 
@@ -29,6 +29,8 @@ Chaque nouveau monstre est expliqué par une note près du feu de camp.
 - Objets : fiole, résine de torche, pierre à aiguiser, cœur séché, herbe amère (bonus permanents).
 - Trous dans les murs : les monstres en fuite s'y cachent puis ressortent ailleurs.
 - Peur : à l'approche des monstres, la torche faiblit, l'image se désature, le cœur bat.
+- Parade (Y / F) : bloque un coup au bon moment et déséquilibre l'ennemi.
+- Armure améliorable au feu de camp (Brann), -12 % de dégâts par niveau.
 - Améliorations au feu de camp, l'or porté est perdu à la mort, le coffre est conservé.
 
 Tout (graphismes, sons, musique) est généré par le code, sans fichier externe.

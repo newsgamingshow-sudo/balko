@@ -90,16 +90,16 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 
 <div class="overlay" id="title">
   <h1>L'Écho des<br>Profondeurs</h1>
-  <div class="tag">Écoute. Ils approchent.</div><div style="font-size:16px;color:#6d6458;margin:-18px 0 18px">prototype v9</div>
+  <div class="tag">Écoute. Ils approchent.</div><div style="font-size:16px;color:#6d6458;margin:-18px 0 18px">prototype v10</div>
   <button class="start" id="startBtn" type="button">Descendre</button>
   <div id="pad">Manette : appuie sur n'importe quel bouton pour la connecter.</div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="start small" id="testBtn" type="button">Tester la manette</button><button class="start small" id="cfgBtn" type="button">Configurer la manette</button></div>
   <div id="padDiag" style="margin-top:6px;font-size:17px;color:#6d6458;max-width:760px"></div>
   <div class="ctrls">
     <div><h3>Manette Xbox</h3>
-      Stick gauche · <span>se déplacer</span><br>Stick droit · <span>regarder</span><br>RT · <span>coup rapide</span><br>RB · <span>coup lourd</span><br>B · <span>esquive</span><br>A · <span>interagir</span><br>X · <span>boire une fiole</span><br>LB / L3 · <span>courir</span><br>LT (maintenir) · <span>avancer sans bruit</span><br>Menu · <span>pause</span></div>
+      Stick gauche · <span>se déplacer</span><br>Stick droit · <span>regarder</span><br>RT · <span>coup rapide</span><br>RB · <span>coup lourd</span><br>B · <span>esquive</span><br>A · <span>interagir</span><br>X · <span>boire une fiole</span><br>Y · <span>parade</span><br>LB / L3 · <span>courir</span><br>LT (maintenir) · <span>avancer sans bruit</span><br>Menu · <span>pause</span></div>
     <div><h3>Clavier / souris</h3>
-      ZQSD / WASD · <span>se déplacer</span><br>Souris · <span>regarder</span><br>Clic gauche · <span>coup rapide</span><br>Clic droit · <span>coup lourd</span><br>Espace · <span>esquive</span><br>E · <span>interagir</span><br>R · <span>boire une fiole</span><br>Maj · <span>courir</span><br>C (maintenir) · <span>avancer sans bruit</span><br>Échap · <span>pause</span></div>
+      ZQSD / WASD · <span>se déplacer</span><br>Souris · <span>regarder</span><br>Clic gauche · <span>coup rapide</span><br>Clic droit · <span>coup lourd</span><br>Espace · <span>esquive</span><br>E · <span>interagir</span><br>R · <span>boire une fiole</span><br>F · <span>parade</span><br>Maj · <span>courir</span><br>C (maintenir) · <span>avancer sans bruit</span><br>Échap · <span>pause</span></div>
   </div>
   <div class="hint">Joue avec un <b>casque audio</b> : chaque monstre a sa voix, et tu les entendras avant de les voir. Les cris des prisonniers te guident… presque toujours.</div>
   <div id="mobile">Ce prototype se joue sur ordinateur, à la manette ou au clavier et à la souris.</div>
@@ -862,99 +862,9 @@ function goblinSet(type,skin,cloth){const key=type+skin+cloth;if(gobCache[key])r
   const set={tex:frames.map((a,i)=>T_('g'+key+i,art(a,pal))),eye:frames.map((a,i)=>T_('ge'+key+i,eyesOnly(a,type==='thrower'?'#ffc22a':'#ff2a18')))};
   gobCache[key]=set;return set}
 // --- Survivants : plus de détails, deux poses, apparences variées
-const SURV_UP=mirror([
-"..NN.......",
-"..nN.......",
-"..nn.......",
-"..kNk......",
-"..ksk...khh",
-"..ksk..khhh",
-"..kSsk.khhh",
-"...kSskhhss",
-"...kSskhsks",
-"....kSkhsss",
-"....kSskhSs",
-".....kkkhsb",
-".....kcckks",
-"....kcccccs",
-"....kccbcCc",
-"....kcCcccc",
-"....kccccsc",
-"....kcCccss",
-".....kccccC",
-".....kcCccc",
-"....kccccCc",
-"...kcccCccc",
-"...kccccccC",
-"...kSscCccc",
-"...kssskcCc",
-"...kSssk.kc",
-"....kkkk.kc",
-".........kk",
-"...........",
-"..........."]);
-const SURV_SIT=mirror([
-"...........",
-"...........",
-"...........",
-"...........",
-"...........",
-"...........",
-"...........",
-"........khh",
-".......khhh",
-"......khhhh",
-"......khhhh",
-"......khhhs",
-".....kkhhhs",
-"....kcckhhs",
-"...kcccckkk",
-"...kccccsss",
-"..kccccssss",
-"..kcCcckkkk",
-"..kccccCcck",
-"..kcCcccccc",
-"..kcccccCcc",
-"..kccCccccc",
-"...kcccccCc",
-"...kSsskkkk",
-"..kSsssk...",
-"..kkkkkk...",
-"...........",
-"...........",
-"...........",
-"..........."]);
-const SURV_FREE=mirror([
-"...........",
-"...........",
-".........kk",
-"........khh",
-".......khhh",
-".......khhs",
-"......khhss",
-"......khssk",
-"......khsss",
-".......ksbs",
-"........kss",
-".....kkkccc",
-"....kSccccC",
-"...kSskcCcc",
-"...ksk.kccc",
-"...ksk.kcCc",
-"...kSk.kccc",
-"....kk.kcCc",
-".......kccc",
-"......kcccC",
-".....kccCcc",
-"....kcccccc",
-"....kcCcccc",
-"....kcccccc",
-".....kSsskk",
-".....kssk..",
-".....kSsk..",
-"....kkkkk..",
-"...........",
-"..........."]);
+const SURV_UP=["..NN................NN..", "..nN................Nn..", "..kNk..............kNk..", "..ksk..............ksk..", "..ksk....kkkkkk....ksk..", "..kSsk..khhhhhhk..ksSk..", "...kSk.khhhhhhhhk.kSk...", "...kSskhhsssssshhksSk...", "....kSkhsksssskshkSk....", "....kSkhsssSSssshkSk....", ".....kkhssskkssshkk.....", "........kSssssSk........", ".........kSssSk.........", "......kcccsccscccck.....", ".....kccCcsscccsCcck....", ".....kcCccssbcccCcck....", ".....kccCccccccCccck....", ".....kcccCccccCcccck....", ".....kccccbcccccCcck....", "......kcCcccccCccck.....", "......kccCcccccccck.....", "......kcccccCccCcck.....", "......kcCcckkkcccck.....", ".....kcccck..kcccck.....", ".....kSsssk..kSsssk.....", "....kSsssk...kSsssk.....", "....kkkkkk...kkkkkk.....", "........................"];
+const SURV_SIT=["........................", "........................", "........................", "........................", "........................", "........................", "........................", "........................", "........kkkkkk..........", ".......khhhhhhk.........", "......khhhhhhhhk........", "......khhhhhhhhk........", ".....kkhhhhhhhhkk.......", "....kcckhhhhhhkcck......", "...kcccckkkkkkcccck.....", "...kccccsssssscccck.....", "..kcccSsssssssScccck....", "..kccCcSSkkkkSScCcck....", "..kcCcccccccccccCcck....", "..kccccCccccccCcccck....", "..kcCcccccccccccccck....", "...kcccccccCcccccck.....", "...kSssk.....kSssSk.....", "..kSsssk....kSsssk.NnNn.", "..kkkkkk....kkkkkk.nNnN.", "........................", "........................", "........................"];
+const SURV_FREE=["........................", "........................", "........................", "........................", ".........kkkkkk.........", "........khhhhhhk........", ".......khhhhhhhhk.......", "......khhsssssshhk......", "......khsksssskshk......", "......khsssSSssshk......", "......khssskkssshk......", "........kSssssSk........", ".........kSssSk.........", ".......kkccccccccck.....", "......kccccsccscccck....", "....kskkcCcsscCckksk....", "....kskkccCccCcckksk....", "....kSkkcCcbcccckkSk....", "....kSkkccccCccckkSk....", "....ksskcCcccCcckssk....", ".....kkkccCccccckkk.....", ".......kcccckcCck.......", ".......kSsk..kSsk.......", ".......kSsk..kSsk.......", ".......kSsk..kSsk.......", ".......kssk..kssk.......", ".......kkkk..kkkk.......", "........................"];
 const SKINS=[['#e0bc9a','#a8866a'],['#c99a74','#8f6a4c'],['#a87652','#74503a'],['#7a5236','#523422'],['#5a3a26','#3a2416']];
 const HAIRS=['#2a221c','#6b4a2a','#a07a3a','#bcb6a8','#3a2a20','#8a3a1a','#141010'];
 const CLOTHS=[['#6c6658','#433f37'],['#5a4c3c','#3a3128'],['#586048','#363c2c'],['#4a4e5e','#2e303a'],['#6a3a3a','#422222'],['#4a3a5a','#2c2238'],['#7a6a4a','#4a4030']];
@@ -1206,7 +1116,7 @@ function buildCamp(){const cx=(camp.x+camp.w/2)*T,cz=(camp.y+camp.h/2)*T;campObj
   campObj.note=null;if(level.F.note){campObj.note={x:(camp.x+camp.w-0.7)*T,z:(camp.y+camp.h/2-0.6)*T,id:level.F.note};const m=plane(0.42,0.5,new THREE.MeshBasicMaterial({map:T_('note',art(NOTE_ART)),alphaTest:0.5,side:THREE.DoubleSide,color:0xc8b890}));m.position.set(campObj.note.x,0.05,campObj.note.z);levelGroup.add(m);billboards.push(m)}
   campObj.seats=[[cx-2.2,cz-1.4],[cx+0.2,cz-2.6],[cx-2.4,cz+1.6]];
   campObj.npcs=[];rebuildCampNpcs()}
-function rebuildCampNpcs(){(campObj.npcs||[]).forEach(n=>levelGroup.remove(n.mesh));campObj.npcs=[];NPCS.forEach((n,k)=>{if(!state.freed[n.id])return;const m=plane(1.05,1.34,litMat(T_('free'+n.id,art(SURV_FREE,npcPal(n)))));
+function rebuildCampNpcs(){(campObj.npcs||[]).forEach(n=>levelGroup.remove(n.mesh));campObj.npcs=[];NPCS.forEach((n,k)=>{if(!state.freed[n.id])return;const m=plane(1.2,1.4,litMat(T_('free'+n.id,art(SURV_FREE,npcPal(n)))));
   m.position.set(campObj.seats[k][0],0,campObj.seats[k][1]);levelGroup.add(m);billboards.push(m);campObj.npcs.push({npc:n,mesh:m,x:campObj.seats[k][0],z:campObj.seats[k][1],line:0})})}
 function npcPal(n){return Object.assign({s:'#c99a74',S:'#8f6a4c'},n.pal)}
 
@@ -1252,7 +1162,7 @@ function populate(depth){goblins=[];prisoners=[];coins=[];drops=[];projectiles=[
   const npcs=depth===1?NPCS.filter(n=>!state.freed[n.id]):[];
   level.survTotal=spots.length;level.survSaved=0;
   spots.forEach((sp,k)=>{const npc=npcs[k]||null;const look=npc?Object.assign({pose:'up',voice:npc.voice,key:'n'+npc.id},npcPal(npc)):survivorLook(level.seed*7+k);
-    const pose=sp.wall?'up':look.pose;const m=plane(1.05,1.43,litMat(T_(look.key+pose,art(pose==='up'?SURV_UP:SURV_SIT,look))));m.position.set(sp.x,0,sp.z);levelGroup.add(m);billboards.push(m);
+    const pose=sp.wall?'up':look.pose;const m=plane(1.2,1.4,litMat(T_(look.key+pose,art(pose==='up'?SURV_UP:SURV_SIT,look))));m.position.set(sp.x,0,sp.z);levelGroup.add(m);billboards.push(m);
     prisoners.push({npc,look,cell:sp.cell||null,wall:sp.wall||null,x:sp.x,z:sp.z,mesh:m,cry:rr(2,8),freed:false,fade:1,h:1,voice:look.voice})})}
 
 // =====================================================================
@@ -1373,9 +1283,9 @@ function menuNav(){let up=pp(12)||dpe('u')||kp('ArrowUp')||kp('KeyW'),down=pp(13
 // =====================================================================
 //  État du jeu
 // =====================================================================
-const state={mode:'title',freed:{},up:{vit:0,end:0,blade:0,flask:0},depth:1,kills:0,time:0,stickHeld:false,sens:5,invertY:false,tutorial:{},
+const state={mode:'title',freed:{},up:{vit:0,end:0,blade:0,flask:0,armor:0},depth:1,kills:0,time:0,stickHeld:false,sens:5,invertY:false,tutorial:{},
   bonus:{torch:0,dmg:0,hp:0,st:0},inv:{},notes:[],saved:0,prevMode:'play'};
-const player={x:0,z:0,yaw:0,pitch:0,hp:100,st:100,gold:0,potions:3,iframes:0,stDelay:0,atk:null,drink:0,dodge:0,dvx:0,dvz:0,bob:0,stepAcc:0,shake:0,hurt:0,noise:3,listen:false,inCamp:true,lowBeat:0,breathT:0,dead:false,kx:0,kz:0};
+const player={parry:0,parryCd:0,x:0,z:0,yaw:0,pitch:0,hp:100,st:100,gold:0,potions:3,iframes:0,stDelay:0,atk:null,drink:0,dodge:0,dvx:0,dvz:0,bob:0,stepAcc:0,shake:0,hurt:0,noise:3,listen:false,inCamp:true,lowBeat:0,breathT:0,dead:false,kx:0,kz:0};
 const maxHp=()=>100+state.up.vit*25+state.bonus.hp, maxSt=()=>100+state.up.end*25+state.bonus.st, dmgMul=()=>(1+state.up.blade*0.3)*(1+state.bonus.dmg), maxPot=()=>3+state.up.flask, potHeal=()=>45+state.up.flask*10;
 let msgTimer=0;function flash(t,sub,dur){$('msg').innerHTML=t+(sub?'<small>'+sub+'</small>':'');$('msg').style.opacity=1;msgTimer=dur||3.2}
 function floorLabel(){const F=level.F;$('floorLbl').innerHTML=`Étage ${state.depth} · ${F.name}<small>Survivants libérés : ${level.survSaved}/${level.survTotal}</small>`}
@@ -1449,7 +1359,11 @@ function killGoblin(g){g.state='dead';g.eyes.visible=false;if(g.mat.emissive)g.m
   if(g.kind==='mere'){level.trap.open=true;$('boss').hidden=true;for(const o of goblins)if(o.kind==='larve'&&o.state!=='dead')killGoblin(o);setTimeout(()=>{sBell();flash('La Couveuse est morte','Plus rien ne naîtra ici. La trappe est ouverte.',6)},1200)}}
 function dropCoin(x,z,v){const m=plane(0.3,0.3,new THREE.MeshBasicMaterial({map:T_('coin',art(COIN)),alphaTest:0.5,side:THREE.DoubleSide,color:0xbfa060}));m.position.set(x,0.2,z);levelGroup.add(m);billboards.push(m);
   coins.push({x,z,v,mesh:m,t:rr(0,6),vy:rr(1.5,3),y:0.6})}
-function hurtPlayer(dmg,g){if(player.iframes>0||player.dead)return;player.hp-=dmg;player.iframes=0.5;player.hurt=1;player.shake=0.45;rumble(0.3,1,0.6);sPlayerHurt();
+function hurtPlayer(dmg,g){if(player.iframes>0||player.dead)return;
+  if(player.parry>0){player.parry=0;player.iframes=0.35;hitstop=0.12;player.shake=0.3;rumble(0.15,0.6,0.9);sClank({x:player.x,z:player.z},false);flash('Parade !','',1);
+    if(g&&g.kind){const nx=(g.x-player.x),nz=(g.z-player.z),nd=Math.hypot(nx,nz)||1;g.kx=nx/nd*6;g.kz=nz/nd*6;
+      if(g.kind==='rampant'){g.state='flee';g.retreat=true;g.t=1.2}else if(g.kind!=='mere'&&g.kind!=='ombre'){g.state='stagger';g.t=1.3;g.flash=0.2}else if(g.kind==='ombre')g.state='flee'}return}
+  dmg*=1-0.12*state.up.armor;player.hp-=dmg;player.iframes=0.5;player.hurt=1;player.shake=0.45;rumble(0.3,1,0.6);sPlayerHurt();
   const dx=player.x-g.x,dz=player.z-g.z,d=Math.hypot(dx,dz)||1;player.kx=dx/d*4;player.kz=dz/d*4;bleed(player.x+(g.x-player.x)*0.3,1.2,player.z+(g.z-player.z)*0.3,6,0,0);
   if(player.hp<=0)die()}
 function die(){player.dead=true;player.hp=0;state.mode='dead';sDeath();document.exitPointerLock&&document.exitPointerLock();
@@ -1739,7 +1653,7 @@ function closeMenu(){$('menuOv').hidden=true;menu=null;state.mode='play';if(last
 function menuUpdate(){const n=menuNav();if(!menu)return;$('menuRaw').textContent=pad.raw?'Manette — dernière entrée reçue : '+(pad.lastRaw||'aucune'):'';
   if(n.up||pp(4)){menu.sel=(menu.sel+menu.items.length-1)%menu.items.length;sUi(false);renderMenu()}if(n.down||pp(5)){menu.sel=(menu.sel+1)%menu.items.length;sUi(false);renderMenu()}
   const it=menu.items[menu.sel];if(n.left&&it.lr){it.lr(-1);sUi(false);renderMenu()}if(n.right&&it.lr){it.lr(1);sUi(false);renderMenu()}if(n.ok)activate();else if(n.back&&performance.now()-menu.opened>200){sUi(false);closeMenu()}}
-function costOf(key,lvl){return({vit:[40,80,140],end:[30,60,110],blade:[50,100,170],flask:[40,90]})[key][lvl]}
+function costOf(key,lvl){return({vit:[40,80,140],end:[30,60,110],blade:[50,100,170],flask:[40,90],armor:[45,95,160]})[key][lvl]}
 function upItem(key,name,desc,maxL,req){return{label:()=>name+' '+'◆'.repeat(state.up[key])+'◇'.repeat(maxL-state.up[key]),
   right:()=>req&&!state.freed[req]?'verrouillé':state.up[key]>=maxL?'max':costOf(key,state.up[key])+' or',
   off:()=>(req&&!state.freed[req])||state.up[key]>=maxL||player.gold<costOf(key,state.up[key]),
@@ -1748,11 +1662,11 @@ function upItem(key,name,desc,maxL,req){return{label:()=>name+' '+'◆'.repeat(s
 function openFire(){showMenu({title:'Feu de camp',sub:()=>`Or : <b style="color:var(--ember);font-weight:400">${player.gold}</b> · Survivants libérés : ${state.saved} · Monstres tués : ${state.kills}`,
   items:[{label:()=>'Se reposer',right:()=>'',desc:()=>'Soigne tes blessures et remplit tes fioles. Le feu tient les monstres à distance.',act:()=>{player.hp=maxHp();player.st=maxSt();player.potions=maxPot();flash('Tu te reposes un instant','La chaleur te rend des forces.')}},
     upItem('vit','Vitalité','+25 points de vie maximum.',3),upItem('end','Endurance','+25 d\'endurance : plus de coups et d\'esquives enchaînés.',3),
-    upItem('blade','Affûter la lame','+30 % de dégâts, par Brann le forgeron.',3,'forge'),upItem('flask','Fiole supplémentaire','+1 fiole et des soins plus puissants, par Ilse l\'herboriste.',2,'herb'),
+    upItem('blade','Affûter la lame','+30 % de dégâts, par Brann le forgeron.',3,'forge'),upItem('armor','Renforcer l\'armure','-12 % de dégâts reçus par niveau : plaques de fer rivetées par Brann.',3,'forge'),upItem('flask','Fiole supplémentaire','+1 fiole et des soins plus puissants, par Ilse l\'herboriste.',2,'herb'),
     {label:()=>'Repartir',right:()=>'',act:()=>closeMenu()}],foot:()=>`${kbd('confirm')} Choisir &nbsp; ${kbd('back')} Fermer`})}
 function goDeeper(){state.depth++;$('win').hidden=true;closeMenuSilently();newFloor();state.mode='play';if(lastDevice==='kb')lockPointer()}
 function closeMenuSilently(){$('menuOv').hidden=true;menu=null}
-function openPause(){if(state.mode!=='play')return;showMenu({title:'Pause',sub:()=>`Étage ${state.depth} · ${level.F.name} · v9`,items:[
+function openPause(){if(state.mode!=='play')return;showMenu({title:'Pause',sub:()=>`Étage ${state.depth} · ${level.F.name} · v10`,items:[
   {label:()=>'Reprendre',act:()=>closeMenu()},
   {label:()=>'Sensibilité caméra',right:()=>'◀ '+state.sens+' ▶',lr:d=>{state.sens=clamp(state.sens+d,1,10)},act:()=>{state.sens=state.sens%10+1},desc:()=>'Gauche / droite pour régler.'},
   {label:()=>'Inverser l\'axe vertical',right:()=>state.invertY?'Oui':'Non',act:()=>{state.invertY=!state.invertY},lr:()=>{state.invertY=!state.invertY}},
@@ -1808,6 +1722,8 @@ function update(dt){state.time+=dt;
   player.stDelay-=dt;if(player.stDelay<=0)player.st=Math.min(maxSt(),player.st+34*dt);player.st=Math.max(0,player.st);
   player.iframes-=dt;player.hurt=Math.max(0,player.hurt-dt*2.2);player.shake=Math.max(0,player.shake-dt*1.8);
   if(pp(7)||mp(0))startAttack(false);if(pp(5)||mp(2))startAttack(true);
+  player.parry=Math.max(0,player.parry-dt);player.parryCd-=dt;
+  if((pp(3)||kp('KeyF'))&&player.parryCd<=0&&!player.atk&&player.st>=12){player.parry=0.28;player.parryCd=0.7;player.st-=12;player.stDelay=0.6;sSwing(false)}
   if(player.atk){const a=player.atk;a.t+=dt;if(!a.done&&a.t>=a.dur*a.hitAt){a.done=true;resolveHit(a.heavy)}if(a.t>=a.dur)player.atk=null}
   if((pp(2)||kp('KeyR'))&&player.drink<=0&&!player.atk){if(player.potions>0&&player.hp<maxHp()){player.potions--;player.drink=1.0;player.healed=false;sPotion();emitNoise(player.x,player.z,3,true)}else if(player.potions<=0)flash('Plus de fioles','Repose-toi au feu de camp pour les remplir.',2)}
   if(player.drink>0){player.drink-=dt;if(!player.healed&&player.drink<0.4){player.healed=true;player.hp=Math.min(maxHp(),player.hp+potHeal())}}
@@ -1824,7 +1740,7 @@ function update(dt){state.time+=dt;
     else if(g.kind==='aveugle'&&g.state!=='wander')ft=Math.max(ft,0.65*clamp(1-gd/9,0,1));else if(g.kind==='ombre')ft=Math.max(ft,0.5*clamp(1-gd/8,0,1));else if(g.kind==='mere'&&g.awake)ft=Math.max(ft,0.7*clamp(1-gd/14,0,1))}
   fear=lerp(fear,player.inCamp?0:ft,Math.min(1,dt*1.5));
   for(const p of prisoners){if(p.freed){if(p.fadeDelay>0){p.fadeDelay-=dt;continue}p.fade-=dt*0.6;p.mesh.material.transparent=true;p.mesh.material.opacity=Math.max(0,p.fade);if(p.fade<=0)p.mesh.visible=false;continue}
-    p.cry-=dt;const d=Math.hypot(p.x-player.x,p.z-player.z);if(p.cry<=0){p.cry=d<5?rr(4,7):rr(7,14);sCry(p,p.voice,d<5?1:(Math.random()<0.7?0:1),d<5?0.6:1)}}
+    p.cry-=dt;const d=Math.hypot(p.x-player.x,p.z-player.z);if(p.cry<=0){p.cry=d<5?rr(3.5,6):rr(4.5,9);sCry(p,p.voice,d<5?1:(Math.random()<0.75?0:1),d<5?0.75:1.35)}}
   for(const c of level.cells){if(c.opening&&c.y<WALL_H){c.y+=dt*1.6;c.mesh.position.y=WALL_H/2+c.y;if(c.y>=WALL_H){c.mesh.visible=false;grid[idx(c.bx,c.by)]=1}}}
   for(let i=coins.length-1;i>=0;i--){const c=coins[i];c.t+=dt;c.vy-=9*dt;c.y=Math.max(0.12,c.y+c.vy*dt);if(c.y<=0.12)c.vy=Math.abs(c.vy)*0.3;const dx=player.x-c.x,dz=player.z-c.z,d=Math.hypot(dx,dz);
     if(d<2.2&&c.t>0.4){c.x+=dx/d*7*dt;c.z+=dz/d*7*dt}c.mesh.position.set(c.x,c.y+Math.sin(c.t*4)*0.04,c.z);if(d<0.6&&c.t>0.4){player.gold+=c.v;levelGroup.remove(c.mesh);coins.splice(i,1);sCoin();emitNoise(player.x,player.z,4,true)}}
@@ -1880,6 +1796,7 @@ function render(dt){
   if(player.atk){const a=player.atk,p=a.t/a.dur;const K=a.heavy?[[0,0,0,0],[0.45,8*S,24*S,1.25],[0.62,-W2*0.75,-6*S,-1.55],[1,0,0,0]]:[[0,0,0,0],[0.25,10*S,8*S,0.85],[0.48,-W2*0.62,-6*S,-1.25],[1,0,0,0]];
     let k=0;while(k<K.length-2&&p>K[k+1][0])k++;const A=K[k],B=K[k+1];let u=clamp((p-A[0])/(B[0]-A[0]),0,1);u=u<0.5?2*u*u:1-Math.pow(-2*u+2,2)/2;sx+=lerp(A[1],B[1],u);sy+=lerp(A[2],B[2],u);sr+=lerp(A[3],B[3],u)}
   if(player.drink>0){sy-=40*S;VM.flask.visible=true;const p=1-player.drink;VM.flask.position.set(W2*0.08,-H2+(14+Math.sin(Math.min(1,p*2)*Math.PI*0.5)*30)*S,1);VM.flask.rotation.z=p>0.3?0.9:0}else VM.flask.visible=false;
+  if(player.parry>0){sx-=W2*0.35;sy+=22*S;sr=1.45}
   if(player.dodge>0){sy-=8*S;ty-=8*S}if(player.listen){sy-=10*S;tx-=6*S}
   VM.sword.position.set(sx|0,sy|0,0);VM.sword.rotation.z=sr;VM.torch.position.set(tx|0,ty|0,0);VM.torch.rotation.z=tr;
   const tint=0.55+0.45*fl;VM.swordMat.color.setRGB(tint*1.0,tint*0.82,tint*0.66);VM.torchMat.color.setRGB(tint,tint*0.8,tint*0.62);VM.flaskMat.color.setRGB(tint,tint*0.85,tint*0.75);
