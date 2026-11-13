@@ -36,6 +36,7 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 #title .tag{font-size:28px;color:var(--ember);margin:10px 0 26px;letter-spacing:.12em}
 .start{font-family:var(--ui);font-size:30px;background:none;color:var(--bone);border:2px solid var(--ember);padding:6px 28px;cursor:pointer;animation:pulse 2.4s ease-in-out infinite}
 .start:focus-visible{outline:3px solid var(--bone);outline-offset:4px}
+.start.small{font-size:20px;padding:2px 14px;margin-top:10px;animation:none;border-color:#5d554b;color:var(--ash)}
 @keyframes pulse{50%{box-shadow:0 0 24px rgba(229,138,58,.45)}}
 @media (prefers-reduced-motion:reduce){.start{animation:none}}
 .ctrls{display:grid;grid-template-columns:repeat(2,minmax(0,300px));gap:4px 40px;margin-top:30px;font-size:21px;color:var(--ash);text-align:left}
@@ -83,6 +84,7 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
   <div class="tag">Écoute. Ils approchent.</div>
   <button class="start" id="startBtn" type="button">Descendre</button>
   <div id="pad">Manette : appuie sur n'importe quel bouton pour la connecter.</div>
+  <button class="start small" id="cfgBtn" type="button">Configurer la manette</button>
   <div class="ctrls">
     <div><h3>Manette Xbox</h3>
       Stick gauche · <span>se déplacer</span><br>Stick droit · <span>regarder</span><br>RT · <span>coup rapide</span><br>RB · <span>coup lourd</span><br>B · <span>esquive</span><br>A · <span>interagir</span><br>X · <span>boire une fiole</span><br>LB / L3 · <span>courir</span><br>LT (maintenir) · <span>tendre l'oreille</span><br>Menu · <span>pause</span></div>
@@ -95,6 +97,10 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 
 <div class="overlay panel" id="menuOv" hidden>
   <div class="box"><h2 id="menuTitle"></h2><div class="sub" id="menuSub"></div><div class="menu" id="menuList"></div><div class="desc" id="menuDesc"></div><div class="foot" id="menuFoot"></div></div>
+</div>
+
+<div class="overlay panel" id="cfgOv" hidden>
+  <div class="box"><h2>Configurer la manette</h2><div class="sub" id="cfgProg"></div><div id="cfgStep" style="font-size:32px;color:var(--bone);margin:14px 0"></div><div class="desc" id="cfgHint"></div><div class="foot">Espace : passer cette étape · Échap : annuler</div></div>
 </div>
 
 <div class="overlay" id="dead" hidden style="background:rgba(0,0,0,.6)">
@@ -665,7 +671,7 @@ function buildViewmodel(){while(vmScene.children.length)vmScene.remove(vmScene.c
 //  Entrées : clavier, souris, manette Xbox
 // =====================================================================
 const keys={},mouse={b:{},dx:0,dy:0};let lastDevice='kb',padIndex=null;
-const pad={axes:[0,0,0,0],b:new Array(17).fill(0),prev:new Array(17).fill(0)};
+const pad={axes:[0,0,0,0],b:new Array(17).fill(0),prev:new Array(17).fill(0),raw:null};
 const justKeys=new Set(),justMouse=new Set();
 addEventListener('keydown',e=>{if(!e.repeat)justKeys.add(e.code);keys[e.code]=true;lastDevice='kb';if(['Space','Tab','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();anyInput()});
 addEventListener('keyup',e=>{keys[e.code]=false});
@@ -674,14 +680,51 @@ addEventListener('mousedown',e=>{mouse.b[e.button]=true;justMouse.add(e.button);
 canvas.addEventListener('mousedown',e=>{if(document.pointerLockElement!==canvas&&state.mode==='play')lockPointer()});
 addEventListener('mouseup',e=>{mouse.b[e.button]=false});
 addEventListener('contextmenu',e=>e.preventDefault());
-addEventListener('gamepadconnected',e=>{padIndex=e.gamepad.index;$('pad').textContent='Manette détectée : '+e.gamepad.id.replace(/\(.*?\)/g,'').trim().slice(0,48)+' ✓';if(state.mode==='play')flash('Manette connectée')});
-addEventListener('gamepaddisconnected',()=>{padIndex=null;$('pad').textContent="Manette déconnectée. Appuie sur un bouton pour la reconnecter."});
+const PADNAMES=['A','B','X','Y','LB','RB','LT','RT','View','Menu','L3','R3','Croix haut','Croix bas','Croix gauche','Croix droite'];
+const STD_MAP={b:Array.from({length:17},(_,i)=>({t:'b',i})),a:[0,1,2,3].map(i=>({i,s:1}))};
+let padMap=STD_MAP,padStd=true,activeGp=null,lastPadName='';const firstAx={};
+function loadMap(gp){padStd=gp.mapping==='standard';let m=null;try{m=JSON.parse(localStorage.getItem('echo-pad:'+gp.id))}catch(e){}padMap=m||STD_MAP;padInfo()}
+function padInfo(){const el=$('pad');if(!el)return;if(!activeGp){el.textContent="Manette : appuie sur n'importe quel bouton pour la connecter.";return}
+  const custom=padMap!==STD_MAP;el.textContent='Manette détectée ✓ '+activeGp.id.replace(/\(.*?\)/g,'').trim().slice(0,40)+(custom?' · configuration perso':padStd?'':' · disposition non standard, configure-la')+(lastPadName?' · dernière touche : '+lastPadName:'')}
+addEventListener('gamepadconnected',e=>{if(state.mode==='play')flash('Manette connectée')});
+addEventListener('gamepaddisconnected',e=>{if(padIndex===e.gamepad.index){padIndex=null;activeGp=null;padInfo()}});
 function lockPointer(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
 document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement!==canvas&&state.mode==='play'&&lastDevice==='kb')openPause()});
-function pollPad(){const list=navigator.getGamepads?navigator.getGamepads():[];let gp=null;if(padIndex!=null)gp=list[padIndex];if(!gp)for(const g of list)if(g){gp=g;padIndex=g.index;break}
-  pad.prev=pad.b.slice();if(!gp){pad.b.fill(0);pad.axes=[0,0,0,0];return null}
-  for(let i=0;i<17;i++){const b=gp.buttons[i];pad.b[i]=b?(typeof b==='object'?b.value:b):0}pad.axes=[gp.axes[0]||0,gp.axes[1]||0,gp.axes[2]||0,gp.axes[3]||0];
+function rawBtn(b){return b?(typeof b==='object'?(b.pressed?Math.max(1,b.value):b.value):b):0}
+function pollPad(){let list=[];try{list=navigator.getGamepads?navigator.getGamepads():[]}catch(e){}
+  // on suit la manette qui vient d'être utilisée (évite les périphériques fantômes)
+  for(const g of list){if(!g)continue;if(!firstAx[g.index])firstAx[g.index]=Array.from(g.axes);
+    const act=Array.from(g.buttons).some(b=>rawBtn(b)>0.5)||Array.from(g.axes).some((a,i)=>Math.abs(a-(firstAx[g.index][i]||0))>0.5);
+    if(act&&padIndex!==g.index){padIndex=g.index;activeGp=g;loadMap(g)}}
+  let gp=padIndex!=null?list[padIndex]:null;if(!gp){for(const g of list)if(g){gp=g;padIndex=g.index;activeGp=g;loadMap(g);break}}
+  activeGp=gp;pad.raw=gp;pad.prev=pad.b.slice();
+  if(!gp||state.mode==='padcfg'){pad.b.fill(0);pad.axes=[0,0,0,0];return gp}
+  for(let k=0;k<17;k++){const m=padMap.b[k];let v=0;if(m){if(m.t==='b')v=rawBtn(gp.buttons[m.i]);else v=clamp(((gp.axes[m.i]||0)-m.r)*m.s,0,1)}pad.b[k]=v}
+  for(let k=0;k<4;k++){const m=padMap.a[k];pad.axes[k]=m?(gp.axes[m.i]||0)*m.s:0}
+  const np=pad.b.findIndex((v,i)=>i<16&&v>0.5&&!(pad.prev[i]>0.5));if(np>=0){lastPadName=PADNAMES[np];if(state.mode==='title')padInfo()}
   if(pad.b.some(v=>v>0.5)||pad.axes.some(a=>Math.abs(a)>0.35)){lastDevice='pad';anyInput()}return gp}
+// --- Assistant de configuration de la manette
+const CFG_STEPS=[['b',0,'Appuie sur A'],['b',1,'Appuie sur B'],['b',2,'Appuie sur X'],['b',3,'Appuie sur Y'],['b',4,'Appuie sur LB (bouton de tranche gauche)'],['b',5,'Appuie sur RB (bouton de tranche droit)'],
+  ['b',6,'Appuie à fond sur LT (gâchette gauche)'],['b',7,'Appuie à fond sur RT (gâchette droite)'],['b',9,'Appuie sur Menu (≡)'],['b',10,'Enfonce le stick gauche (L3)'],
+  ['a',0,'Pousse le stick gauche vers la DROITE'],['a',1,'Pousse le stick gauche vers le BAS'],['a',2,'Pousse le stick droit vers la DROITE'],['a',3,'Pousse le stick droit vers le BAS']];
+let cfg=null;
+function openPadCfg(){const gp=pad.raw;if(!gp){$('pad').textContent="Aucune manette vue : appuie d'abord sur un bouton de la manette, puis réessaie.";if(state.mode!=='title')flash('Aucune manette détectée','Appuie sur un bouton de la manette, puis réessaie.');return}
+  cfg={step:0,prev:state.mode,rest:Array.from(gp.axes),map:{b:new Array(17).fill(null),a:new Array(4).fill(null)},wait:true,last:null};
+  state.mode='padcfg';document.exitPointerLock&&document.exitPointerLock();$('cfgOv').hidden=false;cfgRender()}
+function cfgRender(){const st=CFG_STEPS[cfg.step];$('cfgProg').textContent='Étape '+(cfg.step+1)+' sur '+CFG_STEPS.length;$('cfgStep').textContent=st[2];$('cfgHint').textContent=cfg.wait?'Relâche toutes les touches…':''}
+function cfgClose(save){$('cfgOv').hidden=true;state.mode=cfg.prev;
+  if(save&&pad.raw){const m=cfg.map;padMap=m;try{localStorage.setItem('echo-pad:'+pad.raw.id,JSON.stringify(m))}catch(e){}sUi(true);if(state.mode!=='title')flash('Manette configurée');}
+  cfg=null;padInfo();if(menu)renderMenu()}
+function cfgNext(){cfg.step++;cfg.wait=true;if(cfg.step>=CFG_STEPS.length)cfgClose(true);else cfgRender()}
+function cfgUpdate(){if(kp('Escape')){cfgClose(false);return}if(kp('Space')){sUi(false);cfgNext();return}const gp=pad.raw;if(!gp)return;
+  const ax=Array.from(gp.axes),btn=Array.from(gp.buttons).map(rawBtn);
+  const trig=cfg.map.b.filter(m=>m&&m.t==='a');const trigAxes=trig.map(m=>m.i);
+  if(cfg.wait){const down=btn.some(v=>v>0.4)||ax.some((a,i)=>!trigAxes.includes(i)&&Math.abs(a-(cfg.rest[i]||0))>0.35)||trig.some(m=>clamp(((ax[m.i]||0)-m.r)*m.s,0,1)>0.35);
+    if(!down){cfg.wait=false;cfgRender()}return}
+  const st=CFG_STEPS[cfg.step];let found=null;
+  if(st[0]==='b'){const bi=btn.findIndex(v=>v>0.6);if(bi>=0)found={t:'b',i:bi};else{const ai=ax.findIndex((a,i)=>{const d=a-(cfg.rest[i]||0);return Math.abs(d)>0.6&&!trig.some(m=>m.i===i&&m.s===Math.sign(d))});if(ai>=0){const r=cfg.rest[ai]||0;found={t:'a',i:ai,s:Math.sign(ax[ai]-r),r}}}
+    if(found){cfg.map.b[st[1]]=found;cfg.last=found;sUi(true);cfgNext()}}
+  else{const ai=ax.findIndex((a,i)=>!trigAxes.includes(i)&&Math.abs(a-(cfg.rest[i]||0))>0.6);if(ai>=0){cfg.map.a[st[1]]={i:ai,s:Math.sign(ax[ai]-(cfg.rest[ai]||0))};cfg.last=null;sUi(true);cfgNext()}}}
 const pb=i=>pad.b[i]>0.5,pp=i=>pad.b[i]>0.5&&!(pad.prev[i]>0.5);
 const kp=c=>justKeys.has(c);const mp=b=>justMouse.has(b);
 function rumble(dur,strong,weak){const gp=padIndex!=null&&navigator.getGamepads?navigator.getGamepads()[padIndex]:null;if(gp&&gp.vibrationActuator&&gp.vibrationActuator.playEffect){gp.vibrationActuator.playEffect('dual-rumble',{duration:dur*1000,strongMagnitude:strong,weakMagnitude:weak}).catch(()=>{})}}
@@ -847,6 +890,7 @@ function openPause(){if(state.mode!=='play')return;showMenu({title:'Pause',sub:(
   {label:()=>'Reprendre',act:()=>closeMenu()},
   {label:()=>'Sensibilité caméra',right:()=>'◀ '+state.sens+' ▶',lr:d=>{state.sens=clamp(state.sens+d,1,10)},act:()=>{state.sens=state.sens%10+1},desc:()=>'Gauche / droite pour régler.'},
   {label:()=>'Inverser l\'axe vertical',right:()=>state.invertY?'Oui':'Non',act:()=>{state.invertY=!state.invertY},lr:()=>{state.invertY=!state.invertY}},
+  {label:()=>'Configurer la manette',act:()=>openPadCfg(),desc:()=>'Si un bouton ou un stick ne répond pas, refais la correspondance touche par touche.'},
   {label:()=>'Volume',right:()=>'◀ '+Math.round((AU.master?AU.master.gain.value:0.9)*10)+' ▶',lr:d=>{if(AU.master)AU.master.gain.value=clamp(AU.master.gain.value+d*0.1,0,1.5)},desc:()=>'Gauche / droite pour régler.'}],
   foot:()=>`${kbd('confirm')} Choisir &nbsp; ${kbd('back')} Reprendre`})}
 function win(){state.mode='win';document.exitPointerLock&&document.exitPointerLock();sBell();const m=Math.floor(state.time/60),s=Math.floor(state.time%60);
@@ -859,6 +903,7 @@ function win(){state.mode='win';document.exitPointerLock&&document.exitPointerLo
 let last=performance.now(),flameT=0,mapT=0,voiceT=0,ambT=8,dripT=3;
 function update(dt){state.time+=dt;
   const gp=pollPad();
+  if(state.mode==='padcfg'){cfgUpdate();return}
   if(state.mode==='title'){if(pp(0)||pp(9))startGame();return}
   if(state.mode==='dead'){if(!$('dead').hidden&&(pp(0)||kp('Enter')||kp('KeyE')||kp('Space')||mp(0)))respawn();return}
   if(state.mode==='win'){if(pp(0)||kp('Enter')||kp('KeyE')||kp('Space')||mp(0)){state.depth++;$('win').hidden=true;newFloor();state.mode='play';flash('Étage '+state.depth,'Les gobelins sont plus nombreux et plus féroces.',4);if(lastDevice==='kb')lockPointer()}return}
@@ -977,7 +1022,7 @@ function render(dt){
   renderer.setRenderTarget(null);renderer.render(postScene,postCam)}
 
 function frame(){const t=performance.now();let dt=Math.min(0.05,(t-last)/1000);last=t;
-  if(state.mode==='title'){state.time+=dt;titleCam(dt);pollPad();if(pp(0)||pp(9))startGame()}else update(dt);
+  if(state.mode==='title'){state.time+=dt;titleCam(dt);pollPad();if(pp(8))openPadCfg();else if(pp(0)||pp(9))startGame()}else update(dt);
   render(dt);justKeys.clear();justMouse.clear();requestAnimationFrame(frame)}
 function titleCam(dt){player.yaw+=dt*0.08;player.bob+=dt*0.6}
 
@@ -990,6 +1035,7 @@ function startGame(){if(state.mode!=='title')return;initAudio();$('title').hidde
   setTimeout(()=>flash('Ton feu de camp',`Approche-toi du feu et appuie sur ${kbd('interact')} pour te reposer ou t'améliorer.`,6),600)}
 function respawn(){$('dead').hidden=true;player.dead=false;newFloor();state.mode='play';flash('Tu te réveilles près du feu','Le donjon a changé. Tes améliorations sont intactes.',4.5);if(lastDevice==='kb')lockPointer()}
 $('startBtn').addEventListener('click',()=>{lastDevice='kb';startGame()});
+$('cfgBtn').addEventListener('click',()=>openPadCfg());
 addEventListener('resize',resize);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.mode==='play')openPause()});
 resize();newFloor();player.x=campObj.x+0.2;player.z=campObj.z+3.2;player.yaw=0.4;
