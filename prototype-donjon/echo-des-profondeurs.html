@@ -372,6 +372,59 @@ const goblinTex=[GOB_IDLE,GOB_WALK,GOB_UP,GOB_HIT].map((a,i)=>T_('gob'+i,art(a))
 const goblinEyeTex=[GOB_IDLE,GOB_WALK,GOB_UP,GOB_HIT].map((a,i)=>T_('gobe'+i,eyesOnly(a,'#ff2a18')));
 const corpseCanvas=(()=>{const src=art(GOB_IDLE),c=cv(28,22),x=c.getContext('2d');x.translate(14,11);x.rotate(Math.PI/2);x.drawImage(src,-11,-14);return c})();
 const corpseTex=T_('corpse',corpseCanvas);
+const RAMP_PAL={P:'#94aaa8',Q:'#566664',h:'#1a1e1e',t:'#cfc9a0'};
+const RAMP_IDLE=[
+"......................",
+"........kkkkkk........",
+".......kPPPPPPk.......",
+"......kPhPPPPhPk......",
+".....kPeePPPPeePk.....",
+".....kPeekPPkeePk.....",
+"......kPPPPPPPPk......",
+"......kPQktttkQPk.....",
+".......kPPkkkPPk......",
+"....kkkkQPPPPQkkkk....",
+"...kPPPkPQPPQPkPPPk...",
+"..kPQ.kPPQPPQPPk.QPk..",
+"..kPk.kPQPPPPQPk..kPk.",
+".kPQk..kPPQQPPk...kQPk",
+".kPk...kPQPPQPk....kPk",
+"kPPk..kPPk..kPPk...kPPk",
+"kQPPk.kPk....kPk..kPPQk",
+"kkkkk.kPPk..kPPk..kkkkk",
+"......kkkk..kkkk......",
+"......................"];
+const RAMP_RUN=overlay(clearRect(RAMP_IDLE,0,13,22,19),[
+"..kPQk.kPPQQPPk.kQPk...",
+"..kPk..kPQPPQPk..kPk...",
+".kPPk.kPPk...kPPk.kPPk.",
+"kPPk..kPk.....kPk..kPPk",
+"kkkk..kPPk...kPPk...kkk",
+"......kkkk...kkkk......"],0,13);
+const RAMP_LUNGE=[
+"k.k................k.k",
+"kPk....kkkkkk......kPk",
+".kPk..kPPPPPPk....kPk.",
+"..kPkkPhPPPPhPk..kPk..",
+"...kPPeePPPPeePkkPk...",
+"....kPeekPPkeePPk.....",
+".....kPPPPPPPPk.......",
+"......kPktttttkPk.....",
+".......kPtkkktPk......",
+".....kkkQPPPPQkkk.....",
+"....kPPkPQPPQPkPPk....",
+"......kPPQPPQPPk......",
+"......kPQPPPPQPk......",
+".......kPPQQPPk.......",
+".......kPQPPQPk.......",
+"......kPPk..kPPk......",
+".....kPPk....kPPk.....",
+"....kPPk......kPPk....",
+"....kkkk......kkkk....",
+"......................"];
+const rampTex=[RAMP_IDLE,RAMP_RUN,RAMP_LUNGE,RAMP_LUNGE].map((a,i)=>T_('ramp'+i,art(a,RAMP_PAL)));
+const rampEyeTex=[RAMP_IDLE,RAMP_RUN,RAMP_LUNGE,RAMP_LUNGE].map((a,i)=>T_('rampe'+i,eyesOnly(a,'#e9f2a8')));
+const rampCorpseTex=T_('rampc',(()=>{const src=art(RAMP_IDLE,RAMP_PAL),c=cv(20,23),x=c.getContext('2d');x.translate(10,11);x.rotate(Math.PI/2);x.drawImage(src,-11,-10);return c})());
 const flameCanvas=cv(12,18),flameTex=tex(flameCanvas);
 const fireCanvas=cv(22,30),fireTex=tex(fireCanvas);
 const bloodPoolTex=tex(bloodPoolCanvas());
@@ -444,6 +497,20 @@ function sGobDeath(ent,boss){if(!AU.on)return;const v=voice({ent,dur:2.2,vol:bos
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.6,t+0.03);g.gain.linearRampToValueAtTime(0,t+d);
   const nz=mkNoise(t+d*0.4,t+d+0.4,null);const lp=mkFilt('lowpass',380,3);nz.connect(lp);const ng=mkGain(0,v.in);lp.connect(ng);ng.gain.setValueAtTime(0,t+d*0.4);ng.gain.linearRampToValueAtTime(0.5,t+d*0.6);ng.gain.linearRampToValueAtTime(0,t+d+0.4);
   mkOsc('square',9,t+d*0.4,t+d+0.4,mkGain(0.35,ng.gain))}
+// --- Le Rampant : raclement de gorge, déglutitions, griffes
+function sGollum(ent,vol){if(!AU.on)return;const v=voice({ent,dur:2.4,vol:vol==null?1.2:vol,verb:0.55});const t=now();
+  const nz=mkNoise(t,t+0.5,null);const bp=mkFilt('bandpass',rr(900,1300),1.6);nz.connect(bp);const sh=AU.ctx.createWaveShaper();sh.curve=AU.curveSoft;bp.connect(sh);const rg=mkGain(0,v.in);sh.connect(rg);
+  rg.gain.setValueAtTime(0,t);rg.gain.linearRampToValueAtTime(0.55,t+0.07);rg.gain.linearRampToValueAtTime(0.35,t+0.32);rg.gain.linearRampToValueAtTime(0,t+0.46);mkOsc('square',rr(26,34),t,t+0.5,mkGain(0.3,rg.gain));
+  let tt=t+0.52;const n=2+(Math.random()<0.6?1:0);
+  for(let k=0;k<n;k++){const d=rr(0.11,0.16);const ck=mkNoise(tt,tt+0.012,null);const hp=mkFilt('highpass',1800,0.8);ck.connect(hp);const cg=mkGain(0,v.in);hp.connect(cg);adsr(cg,tt,0.001,0.5,0.01);
+    const o=mkOsc('square',rr(42,58),tt,tt+d+0.05,null);o.frequency.exponentialRampToValueAtTime(rr(24,30),tt+d);const g=mkGain(0,v.in);const fb=formantBank(g,3.2);o.connect(fb.f1);o.connect(fb.f2);
+    fb.f1.frequency.value=rr(380,460);fb.f2.frequency.value=rr(900,1150);adsr(g,tt,0.008,0.7,d);tt+=d+rr(0.06,0.13)}}
+function sRampShriek(ent){if(!AU.on)return;const v=voice({ent,dur:1.4,vol:1.3,verb:0.6});const t=now(),d=0.55;const sh=AU.ctx.createWaveShaper();sh.curve=AU.curve;const g=mkGain(0,v.in);const fb=formantBank(g,3.4);fb.connect(sh);
+  const o=mkOsc('sawtooth',650,t,t+d,sh);o.frequency.linearRampToValueAtTime(1500,t+0.12);o.frequency.linearRampToValueAtTime(820,t+d);mkOsc('sine',38,t,t+d,mkGain(120,o.frequency));
+  fb.f1.frequency.value=330;fb.f2.frequency.value=2500;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.7,t+0.03);g.gain.linearRampToValueAtTime(0,t+d);
+  const nz=mkNoise(t,t+0.7,null);const hp=mkFilt('highpass',3500,0.7);nz.connect(hp);const ng=mkGain(0,v.in);hp.connect(ng);adsr(ng,t,0.02,0.45,0.6)}
+function sRampStep(ent){if(!AU.on)return;const v=voice({ent,dur:0.2,vol:0.6,verb:0.2,h:0.1});const t=now();const nz=mkNoise(t,t+0.03,null);const bp=mkFilt('bandpass',rr(2800,4200),4);nz.connect(bp);const g=mkGain(0,v.in);bp.connect(g);adsr(g,t,0.001,0.9,0.025)}
+function sRampHiss(ent){if(!AU.on)return;const v=voice({ent,dur:0.6,vol:0.9,verb:0.3});const t=now();const nz=mkNoise(t,t+0.3,null);const hp=mkFilt('bandpass',2600,1.2);nz.connect(hp);const g=mkGain(0,v.in);hp.connect(g);adsr(g,t,0.02,0.6,0.25)}
 function sGobStep(ent){if(!AU.on)return;const v=voice({ent,dur:0.2,vol:0.55,verb:0.15,h:0.1});const t=now();const nz=mkNoise(t,t+0.05,null);const bp=mkFilt('bandpass',rr(1300,2300),2.5);nz.connect(bp);const g=mkGain(0,v.in);bp.connect(g);adsr(g,t,0.003,0.7,0.04)}
 // --- Prisonniers : « à l'aide » et sanglots
 function sCry(ent,f0,kind,vol){if(!AU.on)return;const dur=kind===0?1.6:2.2;const v=voice({ent,dur:dur+0.4,vol:vol||1,verb:0.75,ref:2.2,roll:1.1});const t=now();
@@ -620,12 +687,14 @@ function buildCamp(){const cx=(camp.x+camp.w/2)*T,cz=(camp.y+camp.h/2)*T;campObj
 //  Entités
 // =====================================================================
 let goblins=[],prisoners=[],coins=[],corpses=[];
-function spawnGoblin(x,z,kind,depth){const boss=kind==='boss';const sc=boss?1.75:1;
-  const mat=litMat(goblinTex[0],{color:boss?0xd59a8a:0xffffff});const m=plane(1.4*sc,1.76*sc,mat);m.position.set(x,0,z);levelGroup.add(m);
-  const em=plane(1.4*sc,1.76*sc,glowMat(goblinEyeTex[0],kind==='mimic'?0:1));em.position.set(x,0,z);levelGroup.add(em);
+function spawnGoblin(x,z,kind,depth){const boss=kind==='boss';const sc=boss?1.75:1;const ramp=kind==='rampant';const pw=ramp?1.25:1.4,ph=ramp?1.14:1.76;
+  const mat=litMat(ramp?rampTex[0]:goblinTex[0],{color:boss?0xd59a8a:0xffffff});const m=plane(pw*sc,ph*sc,mat);m.position.set(x,0,z);levelGroup.add(m);
+  const em=plane(pw*sc,ph*sc,glowMat(ramp?rampEyeTex[0]:goblinEyeTex[0],kind==='mimic'?0:1));em.position.set(x,0,z);levelGroup.add(em);
   const mul=1+(depth-1)*0.25;
   const g={x,z,hx:x,hz:z,kind,boss,mesh:m,eyes:em,mat,hp:(boss?320:42)*mul,maxHp:(boss?320:42)*mul,dmg:(boss?28:13)*mul,speed:boss?2.6:3.25,radius:boss?0.55:0.35,
-    state:'idle',t:0,wt:rr(1,4),tx:x,tz:z,mut:rr(2,10),step:0,anim:0,frame:0,flash:0,kx:0,kz:0,poise:0,lastSeen:0,alert:false,h:boss?2:1.2,scale:sc,combo:0};
+    state:'idle',t:0,wt:rr(1,4),tx:x,tz:z,mut:rr(2,10),step:0,anim:0,frame:0,flash:0,kx:0,kz:0,poise:0,lastSeen:0,alert:false,h:boss?2:1.2,scale:sc,combo:0,
+    tex:ramp?rampTex:goblinTex,eyeTex:ramp?rampEyeTex:goblinEyeTex};
+  if(ramp)Object.assign(g,{hp:34*mul,maxHp:34*mul,dmg:8*mul,speed:5.7,radius:0.3,h:0.75,state:'roam',watchT:rr(25,45),snd:rr(3,7),hits:0});
   goblins.push(g);return g}
 function populate(depth){goblins=[];prisoners=[];coins=[];corpses=[];
   const R=mulberry32(level.seed+5);const occupied=[];
@@ -636,6 +705,8 @@ function populate(depth){goblins=[];prisoners=[];coins=[];corpses=[];
     const n=r.first?1:2+(R()*2|0)+(depth>1?1:0);for(let k=0;k<n;k++){const p=freeSpot(r);spawnGoblin(p[0],p[1],'goblin',depth)}
     if(!mimicPlaced&&!r.first&&r.d>12&&!level.cells.some(c=>c.room===r)){const p=freeSpot(r);spawnGoblin(p[0],p[1],'mimic',depth);mimicPlaced=true}});
   // rôdeurs de couloir
+  // le Rampant : aperçu furtif aux étages 1-2, chasseur à partir de l'étage 3 (un nouveau monstre tous les deux étages)
+  const nr=depth>=3?(depth>=5?3:2):1;let rp=0;for(let t=0;t<400&&rp<nr;t++){const i=1+(R()*(W-2)|0),j=1+(R()*(H-2)|0);if(!walkG(i,j)||Math.hypot(i-11,j-19)<14)continue;const g=spawnGoblin((i+0.5)*T,(j+0.5)*T,'rampant',depth);g.teaser=depth<3;if(g.teaser)g.watchT=rr(20,35);rp++}
   let placed=0;for(let t=0;t<300&&placed<4;t++){const i=1+(R()*(W-2)|0),j=1+(R()*(H-2)|0);if(!walkG(i,j)||level.rooms.some(r=>i>=r.x&&i<r.x+r.w&&j>=r.y&&j<r.y+r.h))continue;if(Math.hypot(i-11,j-19)<9)continue;spawnGoblin((i+0.5)*T,(j+0.5)*T,'goblin',depth);placed++}
   // prisonniers
   const remaining=NPCS.filter(n=>!state.freed[n.id]);
@@ -684,12 +755,16 @@ addEventListener('contextmenu',e=>e.preventDefault());
 const PADNAMES=['A','B','X','Y','LB','RB','LT','RT','View','Menu','L3','R3','Croix haut','Croix bas','Croix gauche','Croix droite'];
 const STD_MAP={b:Array.from({length:17},(_,i)=>({t:'b',i})),a:[0,1,2,3].map(i=>({i,s:1}))};
 let padMap=STD_MAP,padStd=true,activeGp=null,lastPadName='';const firstAx={};
-function loadMap(gp){padStd=gp.mapping==='standard';let m=null;try{m=JSON.parse(localStorage.getItem('echo-pad:'+gp.id))}catch(e){}padMap=m||STD_MAP;padInfo()}
+function autoMap(gp){if(gp.mapping==='standard')return STD_MAP;const m=JSON.parse(JSON.stringify(STD_MAP));
+  // croix directionnelle souvent exposée comme un axe "hat" (axe 9) sur les manettes Bluetooth non standard
+  const hi=gp.axes.length>9&&Math.abs(gp.axes[9])>1.05?9:-1;if(hi>=0){m.b[12]={t:'h',i:hi,v:-1};m.b[13]={t:'h',i:hi,v:0.142857};m.b[14]={t:'h',i:hi,v:0.714286};m.b[15]={t:'h',i:hi,v:-0.428571}}
+  m.auto=true;return m}
+function loadMap(gp){padStd=gp.mapping==='standard';let m=null;try{m=JSON.parse(localStorage.getItem('echo-pad:'+gp.id))}catch(e){}padMap=m||autoMap(gp);padInfo()}
 function padDiag(list){const el=$('padDiag');if(!el)return;const ua=navigator.userAgent;const br=/Edg\//.test(ua)?'Edge':/OPR\/|Opera/.test(ua)?'Opera':/Firefox\//.test(ua)?'Firefox':/Chrome\//.test(ua)?'Chrome':/Safari\//.test(ua)?'Safari':'autre';
   const n=Array.from(list||[]).filter(Boolean).length;let inFrame=false;try{inFrame=window.top!==window.self}catch(e){inFrame=true}
   el.textContent='Diagnostic : '+br+' · '+(location.protocol==='file:'?'fichier local':location.protocol.replace(':',''))+(inFrame?' · dans un cadre':'')+' · contexte sécurisé : '+(window.isSecureContext?'oui':'non')+' · '+(padErr||'API manette OK')+' · manettes vues : '+n+' · fenêtre active : '+(document.hasFocus()?'oui':'non (clique dans le jeu)')}
 function padInfo(){const el=$('pad');if(!el)return;if(!activeGp){el.textContent="Manette : appuie sur n'importe quel bouton pour la connecter.";return}
-  const custom=padMap!==STD_MAP;el.textContent='Manette détectée ✓ '+activeGp.id.replace(/\(.*?\)/g,'').trim().slice(0,40)+(custom?' · configuration perso':padStd?'':' · disposition non standard, configure-la')+(lastPadName?' · dernière touche : '+lastPadName:'')}
+  const custom=padMap!==STD_MAP&&!padMap.auto;el.textContent='Manette détectée ✓ '+activeGp.id.replace(/\(.*?\)/g,'').trim().slice(0,40)+(custom?' · configuration perso':padStd?'':' · disposition non standard, configure-la')+(lastPadName?' · dernière touche : '+lastPadName:'')+' — appuie sur un bouton pour descendre'}
 addEventListener('gamepadconnected',e=>{if(state.mode==='play')flash('Manette connectée')});
 addEventListener('gamepaddisconnected',e=>{if(padIndex===e.gamepad.index){padIndex=null;activeGp=null;padInfo()}});
 function lockPointer(){try{const p=canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
@@ -704,14 +779,16 @@ function pollPad(){let list=[];try{if(!navigator.getGamepads)padErr='API manette
     if(act&&padIndex!==g.index){padIndex=g.index;activeGp=g;loadMap(g)}}
   let gp=padIndex!=null?list[padIndex]:null;if(!gp){for(const g of list)if(g){gp=g;padIndex=g.index;activeGp=g;loadMap(g);break}}
   activeGp=gp;pad.raw=gp;pad.prev=pad.b.slice();
+  const rawNow=gp?Array.from(gp.buttons).map(rawBtn):[];pad.rawPressed=rawNow.some((v,i)=>v>0.5&&!((pad.rawPrev||[])[i]>0.5));pad.rawPrev=rawNow;
   if(!gp||state.mode==='padcfg'){pad.b.fill(0);pad.axes=[0,0,0,0];return gp}
-  for(let k=0;k<17;k++){const m=padMap.b[k];let v=0;if(m){if(m.t==='b')v=rawBtn(gp.buttons[m.i]);else v=clamp(((gp.axes[m.i]||0)-m.r)*m.s,0,1)}pad.b[k]=v}
+  for(let k=0;k<17;k++){const m=padMap.b[k];let v=0;if(m){if(m.t==='b')v=rawBtn(gp.buttons[m.i]);else if(m.t==='h')v=Math.abs((gp.axes[m.i]||0)-m.v)<0.12?1:0;else v=clamp(((gp.axes[m.i]||0)-m.r)*m.s,0,1)}pad.b[k]=v}
   for(let k=0;k<4;k++){const m=padMap.a[k];pad.axes[k]=m?(gp.axes[m.i]||0)*m.s:0}
   const np=pad.b.findIndex((v,i)=>i<16&&v>0.5&&!(pad.prev[i]>0.5));if(np>=0){lastPadName=PADNAMES[np];if(state.mode==='title')padInfo()}
   if(pad.b.some(v=>v>0.5)||pad.axes.some(a=>Math.abs(a)>0.35)){lastDevice='pad';anyInput()}return gp}
 // --- Assistant de configuration de la manette
 const CFG_STEPS=[['b',0,'Appuie sur A'],['b',1,'Appuie sur B'],['b',2,'Appuie sur X'],['b',3,'Appuie sur Y'],['b',4,'Appuie sur LB (bouton de tranche gauche)'],['b',5,'Appuie sur RB (bouton de tranche droit)'],
   ['b',6,'Appuie à fond sur LT (gâchette gauche)'],['b',7,'Appuie à fond sur RT (gâchette droite)'],['b',9,'Appuie sur Menu (≡)'],['b',10,'Enfonce le stick gauche (L3)'],
+  ['b',12,'Appuie sur la croix HAUT'],['b',13,'Appuie sur la croix BAS'],['b',14,'Appuie sur la croix GAUCHE'],['b',15,'Appuie sur la croix DROITE'],
   ['a',0,'Pousse le stick gauche vers la DROITE'],['a',1,'Pousse le stick gauche vers le BAS'],['a',2,'Pousse le stick droit vers la DROITE'],['a',3,'Pousse le stick droit vers le BAS']];
 let cfg=null;
 function openPadCfg(){const gp=pad.raw;if(!gp){$('pad').textContent="Aucune manette vue : appuie d'abord sur un bouton de la manette, puis réessaie.";if(state.mode!=='title')flash('Aucune manette détectée','Appuie sur un bouton de la manette, puis réessaie.');return}
@@ -724,11 +801,11 @@ function cfgClose(save){$('cfgOv').hidden=true;state.mode=cfg.prev;
 function cfgNext(){cfg.step++;cfg.wait=true;if(cfg.step>=CFG_STEPS.length)cfgClose(true);else cfgRender()}
 function cfgUpdate(){if(kp('Escape')){cfgClose(false);return}if(kp('Space')){sUi(false);cfgNext();return}const gp=pad.raw;if(!gp)return;
   const ax=Array.from(gp.axes),btn=Array.from(gp.buttons).map(rawBtn);
-  const trig=cfg.map.b.filter(m=>m&&m.t==='a');const trigAxes=trig.map(m=>m.i);
+  const trig=cfg.map.b.filter(m=>m&&m.t==='a');const trigAxes=trig.map(m=>m.i);const hats=cfg.map.b.filter(m=>m&&m.t==='h');
   if(cfg.wait){const down=btn.some(v=>v>0.4)||ax.some((a,i)=>!trigAxes.includes(i)&&Math.abs(a-(cfg.rest[i]||0))>0.35)||trig.some(m=>clamp(((ax[m.i]||0)-m.r)*m.s,0,1)>0.35);
     if(!down){cfg.wait=false;cfgRender()}return}
   const st=CFG_STEPS[cfg.step];let found=null;
-  if(st[0]==='b'){const bi=btn.findIndex(v=>v>0.6);if(bi>=0)found={t:'b',i:bi};else{const ai=ax.findIndex((a,i)=>{const d=a-(cfg.rest[i]||0);return Math.abs(d)>0.6&&!trig.some(m=>m.i===i&&m.s===Math.sign(d))});if(ai>=0){const r=cfg.rest[ai]||0;found={t:'a',i:ai,s:Math.sign(ax[ai]-r),r}}}
+  if(st[0]==='b'){const bi=btn.findIndex(v=>v>0.6);if(bi>=0)found={t:'b',i:bi};else{const ai=ax.findIndex((a,i)=>{const d=a-(cfg.rest[i]||0);return Math.abs(d)>0.6&&!trig.some(m=>m.i===i&&m.s===Math.sign(d))&&!hats.some(m=>m.i===i&&Math.abs(m.v-a)<0.1)});if(ai>=0){const r=cfg.rest[ai]||0;found=Math.abs(r)>1.05?{t:'h',i:ai,v:ax[ai]}:{t:'a',i:ai,s:Math.sign(ax[ai]-r),r}}}
     if(found){cfg.map.b[st[1]]=found;cfg.last=found;sUi(true);cfgNext()}}
   else{const ai=ax.findIndex((a,i)=>!trigAxes.includes(i)&&Math.abs(a-(cfg.rest[i]||0))>0.6);if(ai>=0){cfg.map.a[st[1]]={i:ai,s:Math.sign(ax[ai]-(cfg.rest[ai]||0))};cfg.last=null;sUi(true);cfgNext()}}}
 const pb=i=>pad.b[i]>0.5,pp=i=>pad.b[i]>0.5&&!(pad.prev[i]>0.5);
@@ -780,14 +857,17 @@ function resolveHit(heavy){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.ya
     const dot=(dx*fx+dz*fz)/(d||1);if(dot<(heavy?0.55:0.65)&&d>0.7)continue;if(!losClear(player.x,player.z,g.x,g.z))continue;
     const dmg=(heavy?46:21)*dmgMul()*rr(0.92,1.08);damageGoblin(g,dmg,heavy,dx/(d||1),dz/(d||1));hit=true}
   if(hit){hitstop=heavy?0.1:0.055;player.shake=Math.max(player.shake,heavy?0.5:0.28);rumble(heavy?0.2:0.1,heavy?0.9:0.5,heavy?0.6:0.4);sHit(heavy)}}
-function damageGoblin(g,dmg,heavy,nx,nz){g.hp-=dmg;g.flash=0.13;alertGob(g,true);bleed(g.x,g.h*0.8,g.z,heavy?22:12,nx,nz);
+function damageGoblin(g,dmg,heavy,nx,nz){g.hp-=dmg;g.flash=0.13;
+  if(g.kind==='rampant'){bleed(g.x,0.6,g.z,heavy?18:10,nx,nz);if(g.hp<=0){killGoblin(g);return}g.kx=nx*6;g.kz=nz*6;sRampHiss(g);g.state='flee';g.t=g.teaser?3:rr(0.7,1.1);g.hits=0;return}
+  alertGob(g,true);bleed(g.x,g.h*0.8,g.z,heavy?22:12,nx,nz);
   if(g.hp<=0){killGoblin(g);return}
   const kb=heavy?5:2.6;g.kx=nx*kb/(g.boss?3:1);g.kz=nz*kb/(g.boss?3:1);sGobHurt(g);
   if(!g.boss||heavy||(++g.poise>=4)){g.poise=0;g.state='stagger';g.t=heavy?0.65:0.38}}
 function killGoblin(g){g.state='dead';g.eyes.visible=false;g.mat.emissive.setRGB(0,0,0);g.mesh.scale.set(1,1,1);state.kills++;sGobDeath(g,g.boss);
-  g.mat.map=corpseTex;g.mat.needsUpdate=true;g.mesh.geometry.dispose();const w=1.9*g.scale,h=1.0*g.scale;const geo=new THREE.PlaneGeometry(w,h);geo.translate(0,h*0.32,0);g.mesh.geometry=geo;
+  g.mat.map=g.kind==='rampant'?rampCorpseTex:corpseTex;g.mat.needsUpdate=true;g.mesh.geometry.dispose();const w=(g.kind==='rampant'?1.4:1.9)*g.scale,h=(g.kind==='rampant'?0.9:1.0)*g.scale;const geo=new THREE.PlaneGeometry(w,h);geo.translate(0,h*0.32,0);g.mesh.geometry=geo;
   const pool=new THREE.Mesh(new THREE.PlaneGeometry(1.6*g.scale,1.6*g.scale),new THREE.MeshBasicMaterial({map:bloodPoolTex,transparent:true,depthWrite:false}));pool.rotation.x=-Math.PI/2;pool.position.set(g.x,0.015,g.z);levelGroup.add(pool);
-  const gold=g.boss?90:(g.kind==='mimic'?30:rr(8,16)|0);const n=g.boss?8:3;for(let i=0;i<n;i++)dropCoin(g.x+rr(-0.5,0.5),g.z+rr(-0.5,0.5),Math.ceil(gold/n));
+  if(g.kind==='rampant')flash('Le Rampant est mort','Pour cette fois.',3);
+  const gold=g.boss?90:(g.kind==='mimic'||g.kind==='rampant'?(g.kind==='rampant'?45:30):rr(8,16)|0);const n=g.boss?8:3;for(let i=0;i<n;i++)dropCoin(g.x+rr(-0.5,0.5),g.z+rr(-0.5,0.5),Math.ceil(gold/n));
   if(g.boss){level.trap.open=true;$('boss').hidden=true;setTimeout(()=>{sBell();flash('Le Chef gobelin est tombé','La trappe vers les profondeurs est ouverte.',5)},900)}}
 function dropCoin(x,z,v){const m=plane(0.3,0.3,new THREE.MeshBasicMaterial({map:T_('coin',art(COIN)),alphaTest:0.5,side:THREE.DoubleSide,color:0xbfa060}));m.position.set(x,0.2,z);levelGroup.add(m);billboards.push(m);
   coins.push({x,z,v,mesh:m,t:rr(0,6),vy:rr(1.5,3),y:0.6})}
@@ -801,13 +881,53 @@ function die(){player.dead=true;player.hp=0;state.mode='dead';sDeath();document.
 // =====================================================================
 //  IA des gobelins
 // =====================================================================
-function alertGob(g,silent){if(g.state==='dead')return;if(g.kind==='mimic'&&!g.revealed){g.revealed=true;g.eyes.material.opacity=1;silent=false}
+function alertGob(g,silent){if(g.state==='dead'||g.kind==='rampant')return;if(g.kind==='mimic'&&!g.revealed){g.revealed=true;g.eyes.material.opacity=1;silent=false}
   if(!g.alert){g.alert=true;if(!silent||g.boss)sGobScreech(g,g.boss);if(g.boss){$('boss').hidden=false;flash("Il garde la trappe vers l'étage inférieur.",'',3)}
     for(const o of goblins)if(o!==g&&!o.alert&&o.state!=='dead'&&o.kind!=='mimic'&&Math.hypot(o.x-g.x,o.z-g.z)<7){const oo=o;setTimeout(()=>{if(!oo.alert){oo.alert=true;oo.state='hunt';if(Math.random()<0.5)sGobMutter(oo)}},rr(300,900))}}
   if(g.state==='idle')g.state='hunt';g.lastSeen=0}
+function stepToward(g,field,ascend){const ti=tileOf(g.x),tj=tileOf(g.z);let bv=field[idx(ti,tj)];if(bv<0)bv=ascend?-1:9999;let best=null;
+  for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const ni=ti+a,nj=tj+b;if(!walkG(ni,nj))continue;const fv=field[idx(ni,nj)];if(fv<0)continue;if(ascend?fv>bv:fv<bv){bv=fv;best=[ni,nj]}}
+  if(!best)return null;const ex=(best[0]+0.5)*T-g.x,ez=(best[1]+0.5)*T-g.z,ed=Math.hypot(ex,ez)||1;return[ex/ed,ez/ed]}
+function findPeek(g){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);
+  for(let k=0;k<80;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(!walkG(i,j))continue;const x=(i+0.5)*T,z=(j+0.5)*T,dx=x-player.x,dz=z-player.z,d=Math.hypot(dx,dz);
+    if(d<7||d>14)continue;const dot=(dx*fx+dz*fz)/d;if(dot>0.45||dot<-0.3)continue;if(!losClear(x,z,player.x,player.z))continue;
+    const walls=[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>!seeThrough(i+a,j+b));if(walls.length<1)continue;const w=walls[Math.random()*walls.length|0];
+    return{x:x+w[0]*0.55,z:z+w[1]*0.55}}return null}
+function updateRampant(g,dt,dx,dz,d,pInCamp){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);const los=d<20&&losClear(g.x,g.z,player.x,player.z);
+  const watched=los&&d>0.1&&((-dx)*fx+(-dz)*fz)/d>0.9;const seenByPlayer=los&&d>0.1&&((-dx)*fx+(-dz)*fz)/d>0.45;
+  let mv=null,sp=0;g.snd-=dt;
+  switch(g.state){
+  case'roam':{if(!g.field||g.pathT<=0||(g.field[idx(tileOf(g.x),tileOf(g.z))]===0)){g.pathT=rr(10,18);for(let k=0;k<40;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(walkG(i,j)&&Math.hypot((i+0.5)*T-g.x,(j+0.5)*T-g.z)>12){g.field=bfs(i,j,walkG);break}}}
+      g.pathT-=dt;if(g.field){mv=stepToward(g,g.field,false);sp=2.7}
+      if(g.snd<=0){g.snd=rr(5,10);sGollum(g,0.9)}
+      g.watchT-=dt;if(g.watchT<=0&&!pInCamp&&!player.dead&&!seenByPlayer){const p=findPeek(g);if(p){g.x=p.x;g.z=p.z;g.state='watch';g.t=0;g.seen=0;g.watchT=g.teaser?rr(35,60):rr(18,32)}else g.watchT=3}
+      if(!g.teaser&&!pInCamp&&!player.dead&&(d<3||(los&&d<8&&!seenByPlayer)||(d<player.noise*0.8&&los))){g.state='hunt';sRampShriek(g)}
+      break}
+  case'watch':{g.t+=dt;if(g.t>1.2&&!g.cleared){g.cleared=true;sGollum(g,0.6)}if(watched&&d<16)g.seen+=dt;
+      if(g.seen>0.8||d<5.5||g.t>8||pInCamp){g.cleared=false;if(!g.teaser&&!pInCamp&&Math.random()<0.55){g.state='hunt';sRampShriek(g)}else{g.state='flee';g.t=g.teaser?2.5:1.5;sRampHiss(g)}}
+      else if(!los&&g.t>1.5){g.state='roam';g.cleared=false}break}
+  case'flee':{g.t-=dt;if(flow){mv=stepToward(g,flow,true);sp=7.2}
+      if(g.t<=0&&(!los||d>14)){if(g.teaser){for(let k=0;k<40;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(walkG(i,j)&&Math.hypot((i+0.5)*T-player.x,(j+0.5)*T-player.z)>18&&!losClear((i+0.5)*T,(j+0.5)*T,player.x,player.z)){g.x=(i+0.5)*T;g.z=(j+0.5)*T;break}}g.state='roam';g.field=null}
+        else{g.state=pInCamp?'roam':'hunt';g.field=null}}
+      else if(g.t<=0&&!g.teaser&&!pInCamp){g.state='hunt'}break}
+  case'hunt':{if(pInCamp||player.dead){g.state='flee';g.t=1.5;break}
+      if(d<1.7&&los){g.state='windup';g.t=0.22;sRampHiss(g);break}
+      if(los&&d<6)mv=[dx/d,dz/d];else if(flow)mv=stepToward(g,flow,false);sp=g.speed;
+      if(g.snd<=0){g.snd=rr(1.3,2.6);sGollum(g,1.2)}break}
+  case'windup':{g.t-=dt;if(g.t<=0){g.state='strike';g.t=0.14;g.kx=dx/(d||1)*7;g.kz=dz/(d||1)*7;if(d<2.1&&losClear(g.x,g.z,player.x,player.z))hurtPlayer(g.dmg,g)}break}
+  case'strike':{g.t-=dt;if(g.t<=0){g.hits++;if(g.hits>=2){g.hits=0;g.state='flee';g.t=rr(0.8,1.3)}else{g.state='recover';g.t=0.22}}break}
+  case'recover':{g.t-=dt;if(g.t<=0)g.state='hunt';break}
+  default:g.state='roam'}
+  let moving=false;if(mv&&sp>0){moveEnt(g,mv[0]*sp*dt,mv[1]*sp*dt,g.radius,walkG);moving=true}
+  g.step-=dt;if(moving&&g.step<=0){g.step=sp>5?0.1:0.2;if(d<22)sRampStep(g)}
+  g.anim+=dt*(moving?(sp>5?16:7):0);let fr=moving?((g.anim|0)%2):0;if(g.state==='windup'||g.state==='strike')fr=2;
+  if(fr!==g.frame){g.frame=fr;g.mat.map=g.tex[fr];g.eyes.material.map=g.eyeTex[fr]}
+  const fl=g.flash>0;g.mat.emissive.setRGB(fl?0.9:0,fl?0.85:0,fl?0.8:0);g.mesh.position.set(g.x,0,g.z);
+  g.eyes.material.opacity=g.state==='watch'?1:0.85+0.15*Math.sin(state.time*5)}
 function updateGoblins(dt){const ptx=tileOf(player.x),ptz=tileOf(player.z);const pInCamp=inB(ptx,ptz)&&zone[idx(ptx,ptz)]===1;
   for(const g of goblins){if(g.state==='dead')continue;const dx=player.x-g.x,dz=player.z-g.z,d=Math.hypot(dx,dz);
     g.flash=Math.max(0,g.flash-dt);g.kx*=Math.pow(0.002,dt);g.kz*=Math.pow(0.002,dt);moveEnt(g,g.kx*dt,g.kz*dt,g.radius,walkG);
+    if(g.kind==='rampant'){updateRampant(g,dt,dx,dz,d,pInCamp);continue}
     g.det=(g.det||0)-dt;
     if(g.det<=0&&!g.alert&&!player.dead){g.det=0.2;const sight=player.listen?5.5:10;const los=d<sight+2&&losClear(g.x,g.z,player.x,player.z);
       if(g.kind==='mimic'){if(d<4.5&&los)alertGob(g)}else if(!pInCamp&&(d<2.6||(los&&d<sight)||(d<player.noise&&losClear(g.x,g.z,player.x,player.z))||(d<player.noise*0.6)))alertGob(g)}
@@ -836,7 +956,7 @@ function updateGoblins(dt){const ptx=tileOf(player.x),ptz=tileOf(player.z);const
     case'stagger':{g.t-=dt;if(g.t<=0)g.state='hunt';break}}
     // animation
     g.anim+=dt*(moving?(g.state==='hunt'?9:4):0);let fr=moving?((g.anim|0)%2):0;if(g.state==='windup')fr=2;if(g.state==='strike')fr=3;
-    if(fr!==g.frame){g.frame=fr;g.mat.map=goblinTex[fr];g.eyes.material.map=goblinEyeTex[fr]}
+    if(fr!==g.frame){g.frame=fr;g.mat.map=g.tex[fr];g.eyes.material.map=g.eyeTex[fr]}
     const fl=g.flash>0;g.mat.emissive.setRGB(fl?0.9:0,fl?0.85:0,fl?0.8:0);
     const lunge=g.state==='windup'?-0.12:0;g.mesh.position.set(g.x,0,g.z);g.eyes.position.set(g.x,0,g.z);
     const sc=g.state==='windup'?1.06:1;g.mesh.scale.set(sc,sc,1);g.eyes.scale.set(sc,sc,1);
@@ -896,10 +1016,11 @@ function openPause(){if(state.mode!=='play')return;showMenu({title:'Pause',sub:(
   {label:()=>'Reprendre',act:()=>closeMenu()},
   {label:()=>'Sensibilité caméra',right:()=>'◀ '+state.sens+' ▶',lr:d=>{state.sens=clamp(state.sens+d,1,10)},act:()=>{state.sens=state.sens%10+1},desc:()=>'Gauche / droite pour régler.'},
   {label:()=>'Inverser l\'axe vertical',right:()=>state.invertY?'Oui':'Non',act:()=>{state.invertY=!state.invertY},lr:()=>{state.invertY=!state.invertY}},
+  {label:()=>"Passer à l'étage suivant (test)",act:()=>{state.depth++;closeMenu();newFloor();flash('Étage '+state.depth,state.depth>=3?"Quelque chose se racle la gorge dans le noir…":'Les gobelins sont plus nombreux et plus féroces.',4)},desc:()=>"Pour tester : le Rampant chasse à partir de l'étage 3."},
   {label:()=>'Configurer la manette',act:()=>openPadCfg(),desc:()=>'Si un bouton ou un stick ne répond pas, refais la correspondance touche par touche.'},
   {label:()=>'Volume',right:()=>'◀ '+Math.round((AU.master?AU.master.gain.value:0.9)*10)+' ▶',lr:d=>{if(AU.master)AU.master.gain.value=clamp(AU.master.gain.value+d*0.1,0,1.5)},desc:()=>'Gauche / droite pour régler.'}],
   foot:()=>`${kbd('confirm')} Choisir &nbsp; ${kbd('back')} Reprendre`})}
-function win(){state.mode='win';document.exitPointerLock&&document.exitPointerLock();sBell();const m=Math.floor(state.time/60),s=Math.floor(state.time%60);
+function win(){state.mode='win';document.querySelector('#win h2').textContent='Étage '+state.depth+' nettoyé';document.exitPointerLock&&document.exitPointerLock();sBell();const m=Math.floor(state.time/60),s=Math.floor(state.time%60);
   $('winStats').innerHTML=`<div>Gobelins tués : ${state.kills}</div><div>Prisonniers sauvés : ${Object.keys(state.freed).length} / 3</div><div>Temps : ${m} min ${String(s).padStart(2,'0')}</div>`;
   $('winKey').innerHTML=`${kbd('confirm')} Redescendre (étage plus dangereux)`;$('win').hidden=false}
 
@@ -910,9 +1031,9 @@ let last=performance.now(),flameT=0,mapT=0,voiceT=0,ambT=8,dripT=3;
 function update(dt){state.time+=dt;
   const gp=pollPad();
   if(state.mode==='padcfg'){cfgUpdate();return}
-  if(state.mode==='title'){if(pp(0)||pp(9))startGame();return}
+  if(state.mode==='title'){if(pad.rawPressed&&titleReady())startGame();return}
   if(state.mode==='dead'){if(!$('dead').hidden&&(pp(0)||kp('Enter')||kp('KeyE')||kp('Space')||mp(0)))respawn();return}
-  if(state.mode==='win'){if(pp(0)||kp('Enter')||kp('KeyE')||kp('Space')||mp(0)){state.depth++;$('win').hidden=true;newFloor();state.mode='play';flash('Étage '+state.depth,'Les gobelins sont plus nombreux et plus féroces.',4);if(lastDevice==='kb')lockPointer()}return}
+  if(state.mode==='win'){if(pp(0)||kp('Enter')||kp('KeyE')||kp('Space')||mp(0)){state.depth++;$('win').hidden=true;newFloor();state.mode='play';flash('Étage '+state.depth,state.depth===3?"Quelque chose se racle la gorge dans le noir…":'Les gobelins sont plus nombreux et plus féroces.',4);if(lastDevice==='kb')lockPointer()}return}
   if(state.mode==='menu'){menuUpdate();return}
   if(pp(9)||kp('Escape')){openPause();return}
   if(hitstop>0){hitstop-=dt;return}
@@ -1028,13 +1149,14 @@ function render(dt){
   renderer.setRenderTarget(null);renderer.render(postScene,postCam)}
 
 function frame(){const t=performance.now();let dt=Math.min(0.05,(t-last)/1000);last=t;
-  if(state.mode==='title'){state.time+=dt;titleCam(dt);pollPad();if(pp(8))openPadCfg();else if(pp(0)||pp(9))startGame()}else update(dt);
+  if(state.mode==='title'){state.time+=dt;titleCam(dt);pollPad();if(pad.rawPressed&&titleReady())startGame()}else update(dt);
   render(dt);justKeys.clear();justMouse.clear();requestAnimationFrame(frame)}
 function titleCam(dt){player.yaw+=dt*0.08;player.bob+=dt*0.6}
 
 // =====================================================================
 //  Démarrage
 // =====================================================================
+let titleShownAt=performance.now();function titleReady(){return performance.now()-titleShownAt>400}
 function anyInput(){if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume()}
 function startGame(){if(state.mode!=='title')return;initAudio();$('title').hidden=true;$('hud').hidden=false;state.mode='play';state.time=0;if(lastDevice==='kb')lockPointer();
   setTimeout(()=>{if(AU.ctx&&AU.ctx.state!=='running')flash('Son désactivé par le navigateur','Clique dans la fenêtre ou appuie sur une touche du clavier pour l\'activer.',8)},2500);
