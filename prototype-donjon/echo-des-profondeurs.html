@@ -97,7 +97,7 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 </div>
 
 <div class="overlay panel" id="menuOv" hidden>
-  <div class="box"><h2 id="menuTitle"></h2><div class="sub" id="menuSub"></div><div class="menu" id="menuList"></div><div class="desc" id="menuDesc"></div><div class="foot" id="menuFoot"></div></div>
+  <div class="box"><h2 id="menuTitle"></h2><div class="sub" id="menuSub"></div><div class="menu" id="menuList"></div><div class="desc" id="menuDesc"></div><div class="foot" id="menuFoot"></div><div class="foot" id="menuRaw" style="font-size:15px"></div></div>
 </div>
 
 <div class="overlay panel" id="cfgOv" hidden>
@@ -338,9 +338,9 @@ const torchLight=new THREE.PointLight(0xff9346,1.6,13,1.5);scene.add(torchLight)
 const fireLight=new THREE.PointLight(0xff7a2a,2.2,18,1.4);scene.add(fireLight);
 const poolLights=[];for(let i=0;i<4;i++){const l=new THREE.PointLight(0xff8a3a,1.1,9,1.6);l.position.set(0,-50,0);scene.add(l);poolLights.push(l)}
 let rt=null;
-const postMat=new THREE.ShaderMaterial({uniforms:{tDiffuse:{value:null},hurt:{value:0},fade:{value:0},lowhp:{value:0},time:{value:0},warm:{value:0}},
+const postMat=new THREE.ShaderMaterial({uniforms:{tDiffuse:{value:null},hurt:{value:0},fear:{value:0},fade:{value:0},lowhp:{value:0},time:{value:0},warm:{value:0}},
  vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
- fragmentShader:`uniform sampler2D tDiffuse;uniform float hurt,fade,lowhp,time,warm;varying vec2 vUv;
+ fragmentShader:`uniform sampler2D tDiffuse;uniform float hurt,fade,lowhp,time,warm,fear;varying vec2 vUv;
  float f2(vec2 p){return 2.*abs(p.x-p.y)+p.y;}
  float bayer(vec2 p){p=mod(floor(p),4.);vec2 a=mod(p,2.),b=floor(p/2.);return(4.*f2(a)+f2(b))/16.;}
  void main(){vec3 c=texture2D(tDiffuse,vUv).rgb;
@@ -349,6 +349,7 @@ const postMat=new THREE.ShaderMaterial({uniforms:{tDiffuse:{value:null},hurt:{va
   float v=length(vUv-0.5);float vig=smoothstep(0.78,0.28,v);c*=mix(0.45,1.,vig);
   c=mix(c,c*vec3(1.08,0.96,0.86),warm);
   float pulse=0.5+0.5*sin(time*7.);c=mix(c,vec3(0.35,0.,0.),clamp(hurt*0.55+lowhp*(0.25+0.2*pulse),0.,0.8)*smoothstep(0.2,0.65,v+hurt*0.12));
+  float lum=dot(c,vec3(.3,.59,.11));c=mix(c,vec3(lum)*vec3(.82,.9,1.),fear*.5);c*=1.-fear*.35*(1.-vig);
   c*=1.-fade;gl_FragColor=vec4(c,1.);}`,depthTest:false,depthWrite:false});
 const postScene=new THREE.Scene(),postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),postMat));
 // Vue à la première personne (épée + torche) dans une scène orthographique
@@ -562,6 +563,8 @@ function startAmbient(){const ctx=AU.ctx,t=now();
   const dl=mkFilt('lowpass',150,2,null);const dg=mkGain(0.11,AU.amb);dl.connect(dg);mkOsc('sawtooth',41.2,t,t+1e5,dl);mkOsc('sawtooth',41.7,t,t+1e5,dl);mkOsc('sine',0.06,t,t+1e5,mkGain(60,dl.frequency));AU.drone=dg;
   const wn=mkNoise(t,t+1e5,null);const wb=mkFilt('bandpass',320,0.9,null);wn.connect(wb);const wg=mkGain(0.07,AU.amb);wb.connect(wg);mkOsc('sine',0.045,t,t+1e5,mkGain(180,wb.frequency));mkOsc('sine',0.11,t,t+1e5,mkGain(0.035,wg.gain));const ws=mkGain(0.25,AU.verb);wg.connect(ws);AU.wind=wg;
   const fn=mkNoise(t,t+1e5,null);const fl=mkFilt('lowpass',900,0.7,null);fn.connect(fl);AU.fire=mkGain(0,AU.master);fl.connect(AU.fire);
+  const tl=mkFilt('lowpass',420,3,null);AU.tension=mkGain(0,AU.amb);tl.connect(AU.tension);mkOsc('sawtooth',58.27,t,t+1e5,tl);mkOsc('sawtooth',61.74,t,t+1e5,tl);
+  const th=mkGain(0.035,AU.tension);mkOsc('sine',1975,t,t+1e5,th);mkOsc('sine',2093,t,t+1e5,th);mkOsc('sine',4.5,t,t+1e5,mkGain(0.03,th.gain));const tv=mkGain(0.3,AU.verb);AU.tension.connect(tv);
   AU.nextChord=t+0.5;AU.chord=0;AU.nextPluck=t+1;AU.pluck=0;}
 const CHORDS=[[50,57,62,66],[47,54,59,62],[43,50,55,62],[45,52,57,61]];
 const mtof=m=>440*Math.pow(2,(m-69)/12);
@@ -701,7 +704,7 @@ function spawnGoblin(x,z,kind,depth){const boss=kind==='boss';const sc=boss?1.75
   const mul=1+(depth-1)*0.25;
   const g={x,z,hx:x,hz:z,kind,boss,mesh:m,eyes:em,mat,hp:(boss?320:42)*mul,maxHp:(boss?320:42)*mul,dmg:(boss?28:13)*mul,speed:boss?2.6:3.25,radius:boss?0.55:0.35,
     state:'idle',t:0,wt:rr(1,4),tx:x,tz:z,mut:rr(2,10),step:0,anim:0,frame:0,flash:0,kx:0,kz:0,poise:0,lastSeen:0,alert:false,h:boss?2:1.2,scale:sc,combo:0,
-    tex:ramp?rampTex:goblinTex,eyeTex:ramp?rampEyeTex:goblinEyeTex};
+    tex:ramp?rampTex:goblinTex,eyeTex:ramp?rampEyeTex:goblinEyeTex,side:Math.random()<0.5?1:-1};
   if(ramp)Object.assign(g,{hp:70*mul,maxHp:70*mul,dmg:12*mul,speed:5.9,radius:0.42,h:1.4,scale:1.7,state:'roam',watchT:rr(14,22),snd:rr(3,7),scr:rr(4,9),hits:0,y:0,invuln:depth===3});
   goblins.push(g);return g}
 function populate(depth){goblins=[];prisoners=[];coins=[];corpses=[];
@@ -769,7 +772,7 @@ function autoMap(gp){if(gp.mapping==='standard')return STD_MAP;const m=JSON.pars
   // croix directionnelle souvent exposée comme un axe "hat" (axe 9) sur les manettes Bluetooth non standard
   const hi=gp.axes.length>9&&Math.abs(gp.axes[9])>1.05?9:-1;if(hi>=0){m.b[12]={t:'h',i:hi,v:-1};m.b[13]={t:'h',i:hi,v:0.142857};m.b[14]={t:'h',i:hi,v:0.714286};m.b[15]={t:'h',i:hi,v:-0.428571}}
   m.auto=true;return m}
-function loadMap(gp){padStd=gp.mapping==='standard';let m=null;try{m=JSON.parse(localStorage.getItem('echo-pad:'+gp.id))}catch(e){}padMap=m||autoMap(gp);padInfo()}
+function loadMap(gp){padStd=gp.mapping==='standard';let m=null;try{m=JSON.parse(localStorage.getItem('echo-pad:'+gp.id))}catch(e){}if(m&&m.b){const au=autoMap(gp);for(let k=12;k<16;k++)if(!m.b[k])m.b[k]=au.b[k]}padMap=m||autoMap(gp);padInfo()}
 function padDiag(list){const el=$('padDiag');if(!el)return;const ua=navigator.userAgent;const br=/Edg\//.test(ua)?'Edge':/OPR\/|Opera/.test(ua)?'Opera':/Firefox\//.test(ua)?'Firefox':/Chrome\//.test(ua)?'Chrome':/Safari\//.test(ua)?'Safari':'autre';
   const n=Array.from(list||[]).filter(Boolean).length;let inFrame=false;try{inFrame=window.top!==window.self}catch(e){inFrame=true}
   el.textContent='Diagnostic : '+br+' · '+(location.protocol==='file:'?'fichier local':location.protocol.replace(':',''))+(inFrame?' · dans un cadre':'')+' · contexte sécurisé : '+(window.isSecureContext?'oui':'non')+' · '+(padErr||'API manette OK')+' · manettes vues : '+n+' · fenêtre active : '+(document.hasFocus()?'oui':'non (clique dans le jeu)')}
@@ -789,7 +792,14 @@ function pollPad(){let list=[];try{if(!navigator.getGamepads)padErr='API manette
     if(act&&padIndex!==g.index){padIndex=g.index;activeGp=g;loadMap(g)}}
   let gp=padIndex!=null?list[padIndex]:null;if(!gp){for(const g of list)if(g){gp=g;padIndex=g.index;activeGp=g;loadMap(g);break}}
   activeGp=gp;pad.raw=gp;pad.prev=pad.b.slice();
-  const rawNow=gp?Array.from(gp.buttons).map(rawBtn):[];pad.rawPressed=rawNow.some((v,i)=>v>0.5&&!((pad.rawPrev||[])[i]>0.5));pad.rawPrev=rawNow;
+  const rawNow=gp?Array.from(gp.buttons).map(rawBtn):[];
+  // croix : toutes les sources possibles (boutons 12-15 standard, axe "hat" de n'importe quel index)
+  const dp={u:0,d:0,l:0,r:0};
+  if(gp){if(gp.mapping==='standard'&&rawNow.length>=16){dp.u=rawNow[12]>0.5;dp.d=rawNow[13]>0.5;dp.l=rawNow[14]>0.5;dp.r=rawNow[15]>0.5}
+    const rest=firstAx[gp.index]||[];Array.from(gp.axes).forEach((a,i)=>{if(Math.abs(rest[i]||0)>1.05&&Math.abs(a)<=1.05){const k=Math.round((a+1)/2*7)&7;if(k===7||k<=1)dp.u=1;if(k>=1&&k<=3)dp.r=1;if(k>=3&&k<=5)dp.d=1;if(k>=5&&k<=7)dp.l=1}});
+    const ri=rawNow.findIndex((v,i)=>v>0.5&&!((pad.rawPrev||[])[i]>0.5));if(ri>=0)pad.lastRaw='bouton '+ri;
+    Array.from(gp.axes).forEach((a,i)=>{const r0=rest[i]||0;if(Math.abs(a-r0)>0.5&&!(pad.rawAx&&Math.abs(pad.rawAx[i]-r0)>0.5))pad.lastRaw='axe '+i+' = '+a.toFixed(2)});pad.rawAx=Array.from(gp.axes)}
+  pad.dpPrev=pad.dp||{};pad.dp=dp;pad.rawPressed=rawNow.some((v,i)=>v>0.5&&!((pad.rawPrev||[])[i]>0.5));pad.rawPrev=rawNow;
   if(!gp||state.mode==='padcfg'){pad.b.fill(0);pad.axes=[0,0,0,0];return gp}
   for(let k=0;k<17;k++){const m=padMap.b[k];let v=0;if(m){if(m.t==='b')v=rawBtn(gp.buttons[m.i]);else if(m.t==='h')v=Math.abs((gp.axes[m.i]||0)-m.v)<0.12?1:0;else v=clamp(((gp.axes[m.i]||0)-m.r)*m.s,0,1)}pad.b[k]=v}
   for(let k=0;k<4;k++){const m=padMap.a[k];pad.axes[k]=m?(gp.axes[m.i]||0)*m.s:0}
@@ -825,7 +835,8 @@ function dz(v,d){d=d||0.18;const a=Math.abs(v);if(a<d)return 0;return Math.sign(
 const K=(dev)=>lastDevice==='pad'?dev[0]:dev[1];
 const GLY={interact:['A','E'],potion:['X','R'],back:['B','Échap'],confirm:['A','Entrée'],listen:['LT','C']};
 function kbd(a){return '<span class="k">'+K(GLY[a])+'</span>'}
-function menuNav(){let up=pp(12)||kp('ArrowUp')||kp('KeyW'),down=pp(13)||kp('ArrowDown')||kp('KeyS'),left=pp(14)||kp('ArrowLeft')||kp('KeyA'),right=pp(15)||kp('ArrowRight')||kp('KeyD');
+const dpe=k=>!!(pad.dp&&pad.dp[k]&&!(pad.dpPrev&&pad.dpPrev[k]));
+function menuNav(){let up=pp(12)||dpe('u')||kp('ArrowUp')||kp('KeyW'),down=pp(13)||dpe('d')||kp('ArrowDown')||kp('KeyS'),left=pp(14)||dpe('l')||kp('ArrowLeft')||kp('KeyA'),right=pp(15)||dpe('r')||kp('ArrowRight')||kp('KeyD');
   const ay=pad.axes[1],ax=pad.axes[0];if(Math.abs(ay)>0.6&&!state.stickHeld){state.stickHeld=true;if(ay<0)up=true;else down=true}else if(Math.abs(ax)>0.6&&!state.stickHeld){state.stickHeld=true;if(ax<0)left=true;else right=true}
   else if(Math.abs(ay)<0.3&&Math.abs(ax)<0.3)state.stickHeld=false;
   return{up,down,left,right,ok:pp(0)||kp('Enter')||kp('KeyE')||kp('Space'),back:pp(1)||kp('Escape')||kp('Backspace')||pp(9)}}
@@ -860,9 +871,12 @@ function moveEnt(e,dx,dz,r,ok){const steps=Math.ceil(Math.max(Math.abs(dx),Math.
 // =====================================================================
 //  Combat du joueur
 // =====================================================================
-let hitstop=0;
+let hitstop=0,fear=0;
 function startAttack(heavy){const cost=heavy?32:18;if(player.atk||player.drink>0||player.dodge>0)return;if(player.st<6)return;
-  player.st-=cost;player.stDelay=0.75;player.atk={heavy,t:0,dur:heavy?0.82:0.44,hitAt:heavy?0.5:0.36,done:false};player.noise=Math.max(player.noise,7);setTimeout(()=>sSwing(heavy),heavy?320:40)}
+  player.st-=cost;player.stDelay=0.75;
+  {const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);for(const g of goblins){if(g.kind==='rampant'||g.boss||g.state!=='hunt')continue;const gx=g.x-player.x,gz=g.z-player.z,gd=Math.hypot(gx,gz);
+    if(gd<2.8&&(gx*fx+gz*fz)/gd>0.5&&Math.random()<(heavy?0.45:0.25)){g.kx=gx/gd*6.5;g.kz=gz/gd*6.5;g.state='recover';g.t=0.35}}}
+  player.atk={heavy,t:0,dur:heavy?0.82:0.44,hitAt:heavy?0.5:0.36,done:false};player.noise=Math.max(player.noise,7);setTimeout(()=>sSwing(heavy),heavy?320:40)}
 function resolveHit(heavy){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);let hit=false;
   for(const g of goblins){if(g.state==='dead')continue;const dx=g.x-player.x,dz=g.z-player.z,d=Math.hypot(dx,dz);const reach=(heavy?2.55:2.25)+g.radius;if(d>reach)continue;
     const dot=(dx*fx+dz*fz)/(d||1);if(dot<(heavy?0.55:0.65)&&d>0.7)continue;if(!losClear(player.x,player.z,g.x,g.z))continue;
@@ -897,7 +911,8 @@ function die(){player.dead=true;player.hp=0;state.mode='dead';sDeath();document.
 function alertGob(g,silent){if(g.state==='dead'||g.kind==='rampant')return;if(g.kind==='mimic'&&!g.revealed){g.revealed=true;g.eyes.material.opacity=1;silent=false}
   if(!g.alert){g.alert=true;if(!silent||g.boss)sGobScreech(g,g.boss);if(g.boss){$('boss').hidden=false;flash("Il garde la trappe vers l'étage inférieur.",'',3)}
     for(const o of goblins)if(o!==g&&!o.alert&&o.state!=='dead'&&o.kind!=='mimic'&&Math.hypot(o.x-g.x,o.z-g.z)<7){const oo=o;setTimeout(()=>{if(!oo.alert){oo.alert=true;oo.state='hunt';if(Math.random()<0.5)sGobMutter(oo)}},rr(300,900))}}
-  if(g.state==='idle')g.state='hunt';g.lastSeen=0}
+  if(g.state==='idle'||g.state==='search')g.state='hunt';g.lastSeen=0}
+function startSearch(g,x,z){g.state='search';g.sx=x;g.sz=z;g.t=rr(6,9);g.wt=0;g.sfield=null;const i=tileOf(x),j=tileOf(z);if(walkG(i,j))g.sfield=bfs(i,j,walkG,30);if(Math.random()<0.7)sGobMutter(g)}
 function stepToward(g,field,ascend){const ti=tileOf(g.x),tj=tileOf(g.z);let bv=field[idx(ti,tj)];if(bv<0)bv=ascend?-1:9999;let best=null;
   for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const ni=ti+a,nj=tj+b;if(!walkG(ni,nj))continue;const fv=field[idx(ni,nj)];if(fv<0)continue;if(ascend?fv>bv:fv<bv){bv=fv;best=[ni,nj]}}
   if(!best)return null;const ex=(best[0]+0.5)*T-g.x,ez=(best[1]+0.5)*T-g.z,ed=Math.hypot(ex,ez)||1;return[ex/ed,ez/ed]}
@@ -906,6 +921,9 @@ function findCorner(){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);
     const wx=!seeThrough(i-1,j)?-1:!seeThrough(i+1,j)?1:0,wz=!seeThrough(i,j-1)?-1:!seeThrough(i,j+1)?1:0;if(!wx||!wz)continue;
     const x=(i+0.5)*T,z=(j+0.5)*T,dx=x-player.x,dz=z-player.z,d=Math.hypot(dx,dz);if(d<6||d>15)continue;if((dx*fx+dz*fz)/d>0.4)continue;if(!losClear(x,z,player.x,player.z))continue;
     return{cx:x,cz:z,x:x+wx*0.6,z:z+wz*0.6}}return null}
+function farTile(minD){for(let k=0;k<60;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);const x=(i+0.5)*T,z=(j+0.5)*T;if(walkG(i,j)&&Math.hypot(x-player.x,z-player.z)>minD&&!losClear(x,z,player.x,player.z))return{x,z}}return null}
+function findBehind(){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);for(let k=0;k<30;k++){const r=rr(3.2,5.5),lat=rr(-1.5,1.5);const x=player.x-fx*r-fz*lat,z=player.z-fz*r+fx*lat;
+    if(!walkG(tileOf(x),tileOf(z))||blocked(x,z,0.42,walkG))continue;const dx=x-player.x,dz=z-player.z,d=Math.hypot(dx,dz);if((dx*fx+dz*fz)/d>-0.55)continue;if(!losClear(x,z,player.x,player.z))continue;return{x,z}}return null}
 function startHunt(g,scream){g.state='hunt';g.huntT=rr(14,22);g.hits=0;g.field=null;if(scream){sRampScream(g,1.7);player.shake=Math.max(player.shake,0.4);rumble(0.5,0.9,0.9)}}
 function updateRampant(g,dt,dx,dz,d,pInCamp){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);const los=d<22&&losClear(g.x,g.z,player.x,player.z);
   const look=los&&d>0.1?((-dx)*fx+(-dz)*fz)/d:-1;let mv=null,sp=0;g.snd-=dt;g.scr-=dt;
@@ -915,7 +933,9 @@ function updateRampant(g,dt,dx,dz,d,pInCamp){const fx=-Math.sin(player.yaw),fz=-
   case'roam':{if(!g.field||g.pathT<=0||g.field[idx(tileOf(g.x),tileOf(g.z))]===0){g.pathT=rr(10,18);for(let k=0;k<40;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(walkG(i,j)&&Math.hypot((i+0.5)*T-g.x,(j+0.5)*T-g.z)>12){g.field=bfs(i,j,walkG);break}}}
       g.pathT-=dt;if(g.field){mv=stepToward(g,g.field,false);sp=3.1}
       if(g.snd<=0){g.snd=rr(4,8);sGollum(g,1.2)}
-      if(g.scr<=0){g.scr=rr(10,20);sRampScream(g,1.2)}
+      if(g.scr<=0){g.scr=rr(10,20);if(state.depth===3&&Math.random()<0.35)sCry(g,rr(240,300),Math.random()<0.5?0:1,1.1);else sRampScream(g,1.2)}
+      // il apparaît parfois juste derrière toi : un souffle, et s'il te voit te retourner...
+      g.behindT=(g.behindT==null?rr(30,50):g.behindT)-dt;if(g.behindT<=0&&free&&look<0.3&&!player.inCamp){const b=findBehind();if(b){g.x=b.x;g.z=b.z;g.state='behind';g.t=0;g.breath=false;g.behindT=rr(45,80);sGollum(g,0.7);break}else g.behindT=3}
       g.watchT-=dt;if(g.watchT<=0&&free&&look<0.45){const c=findCorner();if(c){Object.assign(g,c);g.y=1.0;g.state='watch';g.t=0;g.seen=0;g.breath=false}else g.watchT=2}
       if(free&&(d<3.5||d<player.noise*0.7))startHunt(g,true);
       break}
@@ -923,20 +943,23 @@ function updateRampant(g,dt,dx,dz,d,pInCamp){const fx=-Math.sin(player.yaw),fz=-
       if(free&&(g.seen>0.2||d<4)){g.x=g.cx;g.z=g.cz;startHunt(g,true)}
       else if(!free||g.t>16){g.x=g.cx;g.z=g.cz;g.state='roam';g.watchT=rr(8,14)}
       break}
+  case'behind':{g.t+=dt;if(free&&look>0.75&&los){startHunt(g,true);break}
+      if(g.t>1.8&&!g.breath){g.breath=true;sGollum(g,0.5)}
+      if(!free||g.t>5){g.breath=false;const f=farTile(16);if(f){g.x=f.x;g.z=f.z}g.state='roam';g.field=null}break}
   case'flee':{g.t-=dt;if(flow){mv=stepToward(g,flow,true);sp=7.6}
       if(g.t<=0){if(g.retreat&&free){g.retreat=false;g.state='hunt';g.huntT=Math.max(g.huntT||0,4)}else if(!los||d>12){g.state='roam';g.field=null;g.watchT=rr(8,15)}}break}
   case'hunt':{g.huntT-=dt;if(!free){g.state='flee';g.retreat=false;g.t=2;break}
       if(g.huntT<=0&&!los){g.state='roam';g.field=null;g.watchT=rr(6,12);break}
       if(d<2.1&&los){g.state='windup';g.t=0.3;sRampHiss(g);break}
       if(los&&d<7)mv=[dx/d,dz/d];else if(flow)mv=stepToward(g,flow,false);sp=g.speed;
-      if(g.snd<=0){g.snd=rr(0.9,1.8);sGollum(g,1.5)}if(g.scr<=0){g.scr=rr(5,9);sRampScream(g,1.3)}break}
+      if(g.snd<=0&&(los||d>9)){g.snd=rr(0.9,1.8);sGollum(g,1.5)}if(g.scr<=0&&(los||d>9)){g.scr=rr(5,9);sRampScream(g,1.3)}break}
   case'windup':{g.t-=dt;if(g.t<=0){g.state='strike';g.t=0.16;g.kx=dx/(d||1)*7;g.kz=dz/(d||1)*7;if(d<2.7&&losClear(g.x,g.z,player.x,player.z))hurtPlayer(g.dmg,g)}break}
   case'strike':{g.t-=dt;if(g.t<=0){g.hits++;if(g.hits>=2){g.hits=0;g.state='flee';g.retreat=true;g.t=rr(0.9,1.4)}else{g.state='recover';g.t=0.25}}break}
   case'recover':{g.t-=dt;if(g.t<=0)g.state='hunt';break}
   default:g.state='roam'}
   let moving=false;if(mv&&sp>0){moveEnt(g,mv[0]*sp*dt,mv[1]*sp*dt,g.radius,walkG);moving=true}
   g.step-=dt;if(moving&&g.step<=0){g.step=sp>5?0.11:0.22;if(d<26)sRampStep(g)}
-  g.anim+=dt*(moving?(sp>5?15:7):0);let fr=moving?((g.anim|0)%2):0;if(g.state==='windup'||g.state==='strike'||g.state==='watch')fr=2;
+  g.anim+=dt*(moving?(sp>5?15:7):0);let fr=moving?((g.anim|0)%2):0;if(g.state==='windup'||g.state==='strike'||g.state==='watch'||g.state==='behind')fr=2;
   if(fr!==g.frame){g.frame=fr;g.mat.map=g.tex[fr];g.eyes.material.map=g.eyeTex[fr]}
   const fl=g.flash>0;g.mat.emissive.setRGB(fl?0.9:0,fl?0.85:0,fl?0.8:0);g.mesh.position.set(g.x,g.y,g.z);
   g.eyes.material.opacity=g.state==='watch'?1:0.85+0.15*Math.sin(state.time*5)}
@@ -946,25 +969,44 @@ function updateGoblins(dt){const ptx=tileOf(player.x),ptz=tileOf(player.z);const
     if(g.kind==='rampant'){updateRampant(g,dt,dx,dz,d,pInCamp);continue}
     g.det=(g.det||0)-dt;
     if(g.det<=0&&!g.alert&&!player.dead){g.det=0.2;const sight=player.listen?5.5:10;const los=d<sight+2&&losClear(g.x,g.z,player.x,player.z);
-      if(g.kind==='mimic'){if(d<4.5&&los)alertGob(g)}else if(!pInCamp&&(d<2.6||(los&&d<sight)||(d<player.noise&&losClear(g.x,g.z,player.x,player.z))||(d<player.noise*0.6)))alertGob(g)}
+      if(g.kind==='mimic'){if(d<4.5&&los)alertGob(g)}else if(!pInCamp&&(d<2.6||(los&&d<sight)||(d<player.noise&&losClear(g.x,g.z,player.x,player.z))||(d<player.noise*0.6)))alertGob(g)
+      else if(!pInCamp&&!g.boss&&g.state==='idle'&&d<player.noise*1.8)startSearch(g,player.x,player.z)}
     let moving=false;
     switch(g.state){
     case'idle':{g.mut-=dt;if(g.mut<=0){if(g.kind==='mimic'){g.mut=rr(5,10);sCry(g,265,Math.random()<0.6?0:1,1)}else if(g.boss){g.mut=rr(4,7);sGobMutter(g,true)}else{g.mut=rr(5,13);sGobMutter(g)}}
       if(g.kind!=='mimic'&&!g.boss){g.wt-=dt;if(g.wt<=0){g.wt=rr(2,6);const a=Math.random()*6.28,r=rr(0.5,2.5);const tx=g.hx+Math.cos(a)*r,tz=g.hz+Math.sin(a)*r;if(walkG(tileOf(tx),tileOf(tz))){g.tx=tx;g.tz=tz}}
         const ex=g.tx-g.x,ez=g.tz-g.z,ed=Math.hypot(ex,ez);if(ed>0.2){moveEnt(g,ex/ed*1.1*dt,ez/ed*1.1*dt,g.radius,walkG);moving=true}}
       break}
-    case'hunt':{g.lastSeen+=dt;const los=losClear(g.x,g.z,player.x,player.z);if(los)g.lastSeen=0;
-      if(pInCamp||g.lastSeen>9||player.dead){g.state='idle';g.alert=false;g.tx=g.hx;g.tz=g.hz;g.wt=0.1;if(g.boss)$('boss').hidden=true;break}
+    case'hunt':{const los=losClear(g.x,g.z,player.x,player.z);if(los){g.lastSeen=0;g.lkx=player.x;g.lkz=player.z}else g.lastSeen+=dt;
+      if(pInCamp||player.dead){g.state='idle';g.alert=false;g.tx=g.hx;g.tz=g.hz;g.wt=0.1;if(g.boss)$('boss').hidden=true;break}
+      // perdu de vue : il va fouiller là où il t'a vu pour la dernière fois
+      if(g.lastSeen>2.5&&!g.boss){startSearch(g,g.lkx==null?player.x:g.lkx,g.lkz==null?player.z:g.lkz);break}
+      // blessé : il recule en hurlant pour appeler les autres, puis revient
+      if(!g.boss&&!g.fled&&g.hp<g.maxHp*0.35){g.fled=true;if(Math.random()<0.6){g.state='retreat';g.t=rr(1.8,2.8);sGobScreech(g);for(const o of goblins)if(o!==g&&o.state!=='dead'&&o.kind!=='rampant'&&Math.hypot(o.x-g.x,o.z-g.z)<12)alertGob(o,true);break}}
       const reach=g.boss?2.4:1.75;
-      if(d<reach&&los){g.state='windup';g.t=g.boss?(g.combo%3===2?1.25:0.85):rr(0.48,0.62);g.heavyHit=g.boss&&g.combo%3===2;g.combo++;sGobAttack(g,g.boss);break}
-      let mx=0,mz=0;if(los&&d<7){mx=dx/d;mz=dz/d}else if(flow){const ti=tileOf(g.x),tj=tileOf(g.z);let best=null,bv=flow[idx(ti,tj)];if(bv<0)bv=999;
-        for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const ni=ti+a,nj=tj+b;if(!inB(ni,nj))continue;const fv=flow[idx(ni,nj)];if(fv>=0&&fv<bv){bv=fv;best=[ni,nj]}}
-        if(best){const tx=(best[0]+0.5)*T,tz=(best[1]+0.5)*T,ex=tx-g.x,ez=tz-g.z,ed=Math.hypot(ex,ez)||1;mx=ex/ed;mz=ez/ed}}
-      for(const o of goblins){if(o===g||o.state==='dead')continue;const ox=g.x-o.x,oz=g.z-o.z,od=Math.hypot(ox,oz);if(od<1.0&&od>0.01){mx+=ox/od*0.6;mz+=oz/od*0.6}}
-      const ml=Math.hypot(mx,mz);if(ml>0.01){const sp=g.speed*(g.kind==='mimic'?1.15:1);moveEnt(g,mx/ml*sp*dt,mz/ml*sp*dt,g.radius,walkG);moving=true}
+      let attackers=0;for(const o of goblins)if(o!==g&&o.kind!=='rampant'&&(o.state==='windup'||o.state==='strike'))attackers++;
+      if(d<reach&&los&&(attackers<2||g.boss)){g.state='windup';g.t=g.boss?(g.combo%3===2?1.25:0.85):rr(0.42,0.62);g.heavyHit=g.boss&&g.combo%3===2;g.combo++;sGobAttack(g,g.boss);break}
+      let mx=0,mz=0;
+      if(los&&d<7){mx=dx/d;mz=dz/d;
+        // ils t'encerclent : chacun arrive par un flanc différent
+        if(!g.boss&&d>2.0){const k=d<4.5?0.9:0.4;mx+=-dz/d*g.side*k;mz+=dx/d*g.side*k}
+        // deux attaquent déjà : les autres tournent autour en grognant, prêts à frapper
+        if(!g.boss&&attackers>=2&&d<3.8){mx=-dz/d*g.side;mz=dx/d*g.side;if(d<2.8){mx-=dx/d*0.9;mz-=dz/d*0.9}if(Math.random()<dt*0.5)sGobMutter(g)}}
+      else if(flow){const v=stepToward(g,flow,false);if(v){mx=v[0];mz=v[1]}}
+      for(const o of goblins){if(o===g||o.state==='dead')continue;const ox=g.x-o.x,oz=g.z-o.z,od=Math.hypot(ox,oz);if(od<1.1&&od>0.01){mx+=ox/od*0.7;mz+=oz/od*0.7}}
+      const ml=Math.hypot(mx,mz);if(ml>0.01){const sp=g.speed*(g.kind==='mimic'?1.15:1)*(attackers>=2&&d<3.8?0.6:1);moveEnt(g,mx/ml*sp*dt,mz/ml*sp*dt,g.radius,walkG);moving=true}
       g.step-=dt;if(moving&&g.step<=0){g.step=g.boss?0.42:0.24;sGobStep(g)}
       g.mut-=dt;if(g.mut<=0){g.mut=rr(2.5,5);if(!g.boss)sGobMutter(g)}
       break}
+    case'search':{g.t-=dt;const los=d<12&&losClear(g.x,g.z,player.x,player.z);
+      if(!pInCamp&&!player.dead&&(los||d<player.noise*0.9)){g.state='hunt';g.alert=true;g.lastSeen=0;if(Math.random()<0.6)sGobScreech(g);break}
+      if(pInCamp||g.t<=0){g.state='idle';g.alert=false;g.tx=g.hx;g.tz=g.hz;g.wt=0.1;break}
+      const ex=g.sx-g.x,ez=g.sz-g.z,ed=Math.hypot(ex,ez);
+      if(ed>0.8){let v=g.sfield?stepToward(g,g.sfield,false):null;if(!v||ed<2.2)v=[ex/ed,ez/ed];moveEnt(g,v[0]*2.6*dt,v[1]*2.6*dt,g.radius,walkG);moving=true}
+      else{g.wt-=dt;if(g.wt<=0){g.wt=rr(0.8,1.6);const a=Math.random()*6.28,nx=g.x+Math.cos(a)*2,nz=g.z+Math.sin(a)*2;if(walkG(tileOf(nx),tileOf(nz))){g.sx=nx;g.sz=nz;g.sfield=null}}}
+      g.mut-=dt;if(g.mut<=0){g.mut=rr(1.6,3.2);sGobMutter(g)}
+      g.step-=dt;if(moving&&g.step<=0){g.step=0.3;sGobStep(g)}break}
+    case'retreat':{g.t-=dt;if(flow){const v=stepToward(g,flow,true);if(v){moveEnt(g,v[0]*3.8*dt,v[1]*3.8*dt,g.radius,walkG);moving=true}}if(g.t<=0){g.state='hunt';g.lastSeen=0;sGobScreech(g)}break}
     case'windup':{g.t-=dt;if(g.t<=0){g.state='strike';g.t=0.2;g.hitDone=false;const l=d||1;g.kx=dx/l*(g.boss?4:5.5);g.kz=dz/l*(g.boss?4:5.5)}break}
     case'strike':{g.t-=dt;if(!g.hitDone&&g.t<0.12){g.hitDone=true;const reach=(g.boss?(g.heavyHit?3.2:2.8):2.05);if(d<reach&&losClear(g.x,g.z,player.x,player.z))hurtPlayer(g.dmg*(g.heavyHit?1.5:1),g);if(g.boss&&g.heavyHit){player.shake=Math.max(player.shake,0.6);rumble(0.35,1,1)}}
       if(g.t<=0){g.state='recover';g.t=g.boss?0.9:rr(0.6,0.9)}break}
@@ -1015,7 +1057,7 @@ function renderMenu(){const m=menu;$('menuTitle').textContent=m.title;$('menuSub
   const cur=m.items[m.sel];$('menuDesc').textContent=cur.desc?cur.desc():'';$('menuFoot').innerHTML=m.foot()}
 function activate(){const it=menu.items[menu.sel];if(it.off&&it.off()){sUi(false);return}sUi(true);it.act&&it.act();if(menu)renderMenu()}
 function closeMenu(){$('menuOv').hidden=true;menu=null;state.mode='play';if(lastDevice==='kb')lockPointer()}
-function menuUpdate(){const n=menuNav();if(!menu)return;if(n.up){menu.sel=(menu.sel+menu.items.length-1)%menu.items.length;sUi(false);renderMenu()}if(n.down){menu.sel=(menu.sel+1)%menu.items.length;sUi(false);renderMenu()}
+function menuUpdate(){const n=menuNav();if(!menu)return;$('menuRaw').textContent=pad.raw?'Manette — dernière entrée reçue : '+(pad.lastRaw||'aucune'):'';if(n.up){menu.sel=(menu.sel+menu.items.length-1)%menu.items.length;sUi(false);renderMenu()}if(n.down){menu.sel=(menu.sel+1)%menu.items.length;sUi(false);renderMenu()}
   const it=menu.items[menu.sel];if(n.left&&it.lr){it.lr(-1);sUi(false);renderMenu()}if(n.right&&it.lr){it.lr(1);sUi(false);renderMenu()}if(n.ok)activate();else if(n.back&&performance.now()-menu.opened>200){sUi(false);closeMenu()}}
 function costOf(key,lvl){return({vit:[40,80,140],end:[30,60,110],blade:[50,100,170],flask:[40,90]})[key][lvl]}
 function upItem(key,name,desc,maxL,req){return{label:()=>name+' '+'◆'.repeat(state.up[key])+'◇'.repeat(maxL-state.up[key]),
@@ -1093,6 +1135,8 @@ function update(dt){state.time+=dt;
   if(it&&(pp(0)||kp('KeyE')))doInteract(it);
   // gobelins
   updateFlow(dt);updateGoblins(dt);
+  let ft=0;for(const g of goblins){if(g.kind!=='rampant'||g.state==='dead')continue;const gd=Math.hypot(g.x-player.x,g.z-player.z);const hunting=['hunt','windup','strike','recover','behind'].includes(g.state);ft=Math.max(ft,clamp(1-gd/(hunting?18:11),0,1)*(hunting?1:0.7))}
+  fear=lerp(fear,player.inCamp?0:ft,Math.min(1,dt*1.5));
   // prisonniers
   for(const p of prisoners){if(p.freed){p.fade-=dt*0.5;p.mesh.material.transparent=true;p.mesh.material.opacity=Math.max(0,p.fade);if(p.fade<=0)p.mesh.visible=false;continue}
     p.cry-=dt;const d=Math.hypot(p.x-player.x,p.z-player.z);if(p.cry<=0){p.cry=d<5?rr(4,7):rr(6,13);sCry(p,p.npc.voice,d<5?1:(Math.random()<0.7?0:1),d<5?0.6:1)}}
@@ -1112,7 +1156,8 @@ function update(dt){state.time+=dt;
       if(dripT<=0){dripT=rr(1.5,5);const p=randomTileNear(3,9);if(p)sDrip(p)}
       if(ambT<=0){ambT=rr(9,22);const r=Math.random();if(r<0.4){const p=randomTileNear(12,26);if(p)sDistantGrowl(p)}else if(r<0.7){const p=randomTileNear(5,14);if(p)sChainRattle(p)}else{const p=randomTileNear(14,28);if(p)sGobMutter({x:p.x,z:p.z,h:1.2})}}}
     voiceT-=dt;if(voiceT<=0){voiceT=0.1;for(const v of voices)updVoice(v,false)}
-    const low=player.hp<maxHp()*0.3;player.lowBeat-=dt;if(low&&player.lowBeat<=0){player.lowBeat=player.hp<maxHp()*0.15?0.6:0.85;sHeart()}}
+    AU.tension.gain.setTargetAtTime(fear*0.18,now(),0.5);
+    const low=player.hp<maxHp()*0.3||fear>0.45;player.lowBeat-=dt;if(low&&player.lowBeat<=0){player.lowBeat=(player.hp<maxHp()*0.15||fear>0.75)?0.5:0.8;sHeart()}}
   // carte
   mapT-=dt;if(mapT<=0&&state.freed.carto){mapT=0.25;drawMap()}
   msgTimer-=dt;if(msgTimer<=0)$('msg').style.opacity=0;
@@ -1137,10 +1182,10 @@ function render(dt){
     else{L.setPosition(camera.position.x,camera.position.y,camera.position.z);L.setOrientation(fx,0,fz,0,1,0)}}
   // lumières
   const fl=0.85+0.1*Math.sin(state.time*11)+0.07*Math.sin(state.time*23.7)+Math.random()*0.06;
-  torchLight.intensity=1.55*fl;torchLight.position.set(player.x-Math.cos(player.yaw)*0.35,EYE+0.15,player.z+Math.sin(player.yaw)*0.35);
+  torchLight.intensity=1.55*fl*(1-fear*0.35)*(fear>0.25&&Math.random()<fear*0.14?0.2:1);torchLight.position.set(player.x-Math.cos(player.yaw)*0.35,EYE+0.15,player.z+Math.sin(player.yaw)*0.35);
   fireLight.intensity=2.1*(0.85+0.15*Math.sin(state.time*7)+Math.random()*0.1);
   const ts=level.torches.map(t=>({t,d:(t.x-player.x)**2+(t.z-player.z)**2})).sort((a,b)=>a.d-b.d);
-  poolLights.forEach((l,i)=>{const e=ts[i];if(e){l.position.set(e.t.x-e.t.dx*0.4,1.95,e.t.z-e.t.dy*0.4);l.intensity=1.05*(0.85+0.15*Math.sin(state.time*9+i*2)+Math.random()*0.08)}else l.position.y=-50});
+  poolLights.forEach((l,i)=>{const e=ts[i];if(e){l.position.set(e.t.x-e.t.dx*0.4,1.95,e.t.z-e.t.dy*0.4);l.intensity=1.05*(0.85+0.15*Math.sin(state.time*9+i*2)+Math.random()*0.08)*(1-fear*0.6)*(fear>0.4&&Math.random()<fear*0.1?0:1)}else l.position.y=-50});
   // flammes animées
   flameT-=dt;if(flameT<=0){flameT=0.075;drawFlame(flameCanvas,state.time,false);flameTex.needsUpdate=true;drawFlame(fireCanvas,state.time*0.8+3,true);fireTex.needsUpdate=true}
   // billboards
@@ -1157,7 +1202,7 @@ function render(dt){
   VM.sword.position.set(sx|0,sy|0,0);VM.sword.rotation.z=sr;VM.torch.position.set(tx|0,ty|0,0);VM.torch.rotation.z=tr;
   const tint=0.55+0.45*fl;VM.swordMat.color.setRGB(tint*1.0,tint*0.82,tint*0.66);VM.torchMat.color.setRGB(tint,tint*0.8,tint*0.62);VM.flaskMat.color.setRGB(tint,tint*0.85,tint*0.75);
   // rendu
-  postMat.uniforms.hurt.value=player.hurt;postMat.uniforms.time.value=state.time;postMat.uniforms.lowhp.value=player.hp<maxHp()*0.3?1:0;
+  postMat.uniforms.hurt.value=player.hurt;postMat.uniforms.fear.value=fear;postMat.uniforms.time.value=state.time;postMat.uniforms.lowhp.value=player.hp<maxHp()*0.3?1:0;
   postMat.uniforms.warm.value=clamp(1-Math.hypot(player.x-campObj.x,player.z-campObj.z)/10,0,1)*0.6;
   postMat.uniforms.fade.value=state.mode==='dead'?Math.min(0.85,(postMat.uniforms.fade.value||0)+dt*0.5):Math.max(0,postMat.uniforms.fade.value-dt*1.5);
   renderer.setRenderTarget(rt);renderer.autoClear=true;renderer.render(scene,camera);
