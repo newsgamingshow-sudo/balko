@@ -4,7 +4,7 @@ Prototype jouable d'un dungeon crawler en vue FPS : dark fantasy, rendu 3D pixel
 
 ## Lancer le jeu
 
-Ouvre `echo-des-profondeurs.html` dans Chrome ou Edge (connexion internet nécessaire pour charger Three.js).
+Ouvre `echo-des-profondeurs.html` dans Chrome ou Edge (fonctionne hors ligne, Three.js est intégré au fichier).
 Joue avec un casque audio.
 
 Manette Xbox (Bluetooth) : connecte-la au PC, puis appuie sur un bouton une fois la page ouverte.
