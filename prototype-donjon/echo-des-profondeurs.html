@@ -509,6 +509,14 @@ function sRampShriek(ent){if(!AU.on)return;const v=voice({ent,dur:1.4,vol:1.3,ve
   const o=mkOsc('sawtooth',650,t,t+d,sh);o.frequency.linearRampToValueAtTime(1500,t+0.12);o.frequency.linearRampToValueAtTime(820,t+d);mkOsc('sine',38,t,t+d,mkGain(120,o.frequency));
   fb.f1.frequency.value=330;fb.f2.frequency.value=2500;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.7,t+0.03);g.gain.linearRampToValueAtTime(0,t+d);
   const nz=mkNoise(t,t+0.7,null);const hp=mkFilt('highpass',3500,0.7);nz.connect(hp);const ng=mkGain(0,v.in);hp.connect(ng);adsr(ng,t,0.02,0.45,0.6)}
+function sRampScream(ent,vol){if(!AU.on)return;const v=voice({ent,dur:2.6,vol:vol==null?1.5:vol,verb:0.8,ref:3.2,roll:0.95});const t=now(),d=rr(1.1,1.5);
+  const sh=AU.ctx.createWaveShaper();sh.curve=AU.curve;const g=mkGain(0,v.in);const fb=formantBank(g,3.6);fb.connect(sh);
+  [rr(560,620),rr(640,700)].forEach((f,k)=>{const o=mkOsc('sawtooth',f,t,t+d+0.1,sh);o.frequency.linearRampToValueAtTime(f*2.6,t+0.18);o.frequency.linearRampToValueAtTime(f*2.1,t+d*0.6);o.frequency.linearRampToValueAtTime(f*1.2,t+d);
+    mkOsc('sine',k?9:7,t,t+d,mkGain(f*0.12,o.frequency));mkOsc('square',41,t,t+d,mkGain(f*0.05,o.frequency))});
+  fb.f1.frequency.setValueAtTime(330,t);fb.f2.frequency.setValueAtTime(2700,t);fb.f1.frequency.linearRampToValueAtTime(700,t+d);fb.f2.frequency.linearRampToValueAtTime(1300,t+d);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.9,t+0.05);g.gain.setValueAtTime(0.9,t+d*0.7);g.gain.linearRampToValueAtTime(0,t+d);
+  const nz=mkNoise(t,t+d,null);const bp=mkFilt('bandpass',3200,1.5);nz.connect(bp);const ng=mkGain(0,v.in);bp.connect(ng);adsr(ng,t,0.03,0.5,d);
+  const lo=mkOsc('sawtooth',70,t,t+d,null);lo.frequency.linearRampToValueAtTime(45,t+d);const ll=mkFilt('lowpass',300,2);lo.connect(ll);const lg=mkGain(0,v.in);ll.connect(lg);adsr(lg,t,0.05,0.5,d)}
 function sRampStep(ent){if(!AU.on)return;const v=voice({ent,dur:0.2,vol:0.6,verb:0.2,h:0.1});const t=now();const nz=mkNoise(t,t+0.03,null);const bp=mkFilt('bandpass',rr(2800,4200),4);nz.connect(bp);const g=mkGain(0,v.in);bp.connect(g);adsr(g,t,0.001,0.9,0.025)}
 function sRampHiss(ent){if(!AU.on)return;const v=voice({ent,dur:0.6,vol:0.9,verb:0.3});const t=now();const nz=mkNoise(t,t+0.3,null);const hp=mkFilt('bandpass',2600,1.2);nz.connect(hp);const g=mkGain(0,v.in);hp.connect(g);adsr(g,t,0.02,0.6,0.25)}
 function sGobStep(ent){if(!AU.on)return;const v=voice({ent,dur:0.2,vol:0.55,verb:0.15,h:0.1});const t=now();const nz=mkNoise(t,t+0.05,null);const bp=mkFilt('bandpass',rr(1300,2300),2.5);nz.connect(bp);const g=mkGain(0,v.in);bp.connect(g);adsr(g,t,0.003,0.7,0.04)}
@@ -687,27 +695,29 @@ function buildCamp(){const cx=(camp.x+camp.w/2)*T,cz=(camp.y+camp.h/2)*T;campObj
 //  Entités
 // =====================================================================
 let goblins=[],prisoners=[],coins=[],corpses=[];
-function spawnGoblin(x,z,kind,depth){const boss=kind==='boss';const sc=boss?1.75:1;const ramp=kind==='rampant';const pw=ramp?1.25:1.4,ph=ramp?1.14:1.76;
-  const mat=litMat(ramp?rampTex[0]:goblinTex[0],{color:boss?0xd59a8a:0xffffff});const m=plane(pw*sc,ph*sc,mat);m.position.set(x,0,z);levelGroup.add(m);
-  const em=plane(pw*sc,ph*sc,glowMat(ramp?rampEyeTex[0]:goblinEyeTex[0],kind==='mimic'?0:1));em.position.set(x,0,z);levelGroup.add(em);
+function spawnGoblin(x,z,kind,depth){const boss=kind==='boss';const sc=boss?1.75:1;const ramp=kind==='rampant';const pw=ramp?1.25:1.4,ph=ramp?1.14:1.76;const sc2=ramp?1.7:sc;
+  const mat=litMat(ramp?rampTex[0]:goblinTex[0],{color:boss?0xd59a8a:0xffffff});const m=plane(pw*sc2,ph*sc2,mat);m.position.set(x,0,z);levelGroup.add(m);
+  const em=plane(pw*sc2,ph*sc2,glowMat(ramp?rampEyeTex[0]:goblinEyeTex[0],kind==='mimic'?0:1));em.position.set(x,0,z);levelGroup.add(em);
   const mul=1+(depth-1)*0.25;
   const g={x,z,hx:x,hz:z,kind,boss,mesh:m,eyes:em,mat,hp:(boss?320:42)*mul,maxHp:(boss?320:42)*mul,dmg:(boss?28:13)*mul,speed:boss?2.6:3.25,radius:boss?0.55:0.35,
     state:'idle',t:0,wt:rr(1,4),tx:x,tz:z,mut:rr(2,10),step:0,anim:0,frame:0,flash:0,kx:0,kz:0,poise:0,lastSeen:0,alert:false,h:boss?2:1.2,scale:sc,combo:0,
     tex:ramp?rampTex:goblinTex,eyeTex:ramp?rampEyeTex:goblinEyeTex};
-  if(ramp)Object.assign(g,{hp:34*mul,maxHp:34*mul,dmg:8*mul,speed:5.7,radius:0.3,h:0.75,state:'roam',watchT:rr(25,45),snd:rr(3,7),hits:0});
+  if(ramp)Object.assign(g,{hp:70*mul,maxHp:70*mul,dmg:12*mul,speed:5.9,radius:0.42,h:1.4,scale:1.7,state:'roam',watchT:rr(14,22),snd:rr(3,7),scr:rr(4,9),hits:0,y:0,invuln:depth===3});
   goblins.push(g);return g}
 function populate(depth){goblins=[];prisoners=[];coins=[];corpses=[];
   const R=mulberry32(level.seed+5);const occupied=[];
   const freeSpot=(r)=>{for(let t=0;t<30;t++){const i=r.x+(R()*r.w|0),j=r.y+(R()*r.h|0);const x=(i+0.5)*T,z=(j+0.5)*T;if(occupied.every(o=>Math.hypot(o[0]-x,o[1]-z)>1.6)){occupied.push([x,z]);return[x,z]}}return[(r.cx+0.5)*T,(r.cy+0.5)*T]};
   occupied.push([level.trap.x,level.trap.z]);
   let mimicPlaced=false;
-  level.rooms.forEach(r=>{if(r.boss){spawnGoblin(level.trap.x,level.trap.z-1.2,'boss',depth);for(let k=0;k<2;k++){const p=freeSpot(r);spawnGoblin(p[0],p[1],'goblin',depth)}return}
+  if(depth!==3)level.rooms.forEach(r=>{if(r.boss){spawnGoblin(level.trap.x,level.trap.z-1.2,'boss',depth);for(let k=0;k<2;k++){const p=freeSpot(r);spawnGoblin(p[0],p[1],'goblin',depth)}return}
     const n=r.first?1:2+(R()*2|0)+(depth>1?1:0);for(let k=0;k<n;k++){const p=freeSpot(r);spawnGoblin(p[0],p[1],'goblin',depth)}
     if(!mimicPlaced&&!r.first&&r.d>12&&!level.cells.some(c=>c.room===r)){const p=freeSpot(r);spawnGoblin(p[0],p[1],'mimic',depth);mimicPlaced=true}});
   // rôdeurs de couloir
   // le Rampant : aperçu furtif aux étages 1-2, chasseur à partir de l'étage 3 (un nouveau monstre tous les deux étages)
-  const nr=depth>=3?(depth>=5?3:2):1;let rp=0;for(let t=0;t<400&&rp<nr;t++){const i=1+(R()*(W-2)|0),j=1+(R()*(H-2)|0);if(!walkG(i,j)||Math.hypot(i-11,j-19)<14)continue;const g=spawnGoblin((i+0.5)*T,(j+0.5)*T,'rampant',depth);g.teaser=depth<3;if(g.teaser)g.watchT=rr(20,35);rp++}
-  let placed=0;for(let t=0;t<300&&placed<4;t++){const i=1+(R()*(W-2)|0),j=1+(R()*(H-2)|0);if(!walkG(i,j)||level.rooms.some(r=>i>=r.x&&i<r.x+r.w&&j>=r.y&&j<r.y+r.h))continue;if(Math.hypot(i-11,j-19)<9)continue;spawnGoblin((i+0.5)*T,(j+0.5)*T,'goblin',depth);placed++}
+  // le Rampant : seul à l'étage 3 (immortel), puis avec les gobelins à partir de l'étage 4
+  if(depth===3)level.trap.open=true;
+  const nr=depth===3?1:depth>=4?(depth>=6?2:1):0;let rp=0;for(let t=0;t<400&&rp<nr;t++){const i=1+(R()*(W-2)|0),j=1+(R()*(H-2)|0);if(!walkG(i,j)||Math.hypot(i-11,j-19)<16)continue;spawnGoblin((i+0.5)*T,(j+0.5)*T,'rampant',depth);rp++}
+  let placed=0;for(let t=0;t<300&&placed<4&&depth!==3;t++){const i=1+(R()*(W-2)|0),j=1+(R()*(H-2)|0);if(!walkG(i,j)||level.rooms.some(r=>i>=r.x&&i<r.x+r.w&&j>=r.y&&j<r.y+r.h))continue;if(Math.hypot(i-11,j-19)<9)continue;spawnGoblin((i+0.5)*T,(j+0.5)*T,'goblin',depth);placed++}
   // prisonniers
   const remaining=NPCS.filter(n=>!state.freed[n.id]);
   level.cells.forEach((c,k)=>{const n=remaining[k];const x=(c.px+0.5)*T,z=(c.py+0.5)*T;
@@ -830,7 +840,8 @@ let msgTimer=0;function flash(t,sub,dur){$('msg').innerHTML=t+(sub?'<small>'+sub
 
 function newFloor(keepSeed){const seed=keepSeed||((Math.random()*1e9)|0);genLevel(seed,state.depth);buildLevel();populate(state.depth);
   player.x=(camp.x+camp.w/2+1.4)*T;player.z=(camp.y+camp.h/2)*T;player.yaw=-Math.PI/2;player.pitch=0;
-  player.hp=maxHp();player.st=maxSt();player.potions=maxPot();player.atk=null;player.drink=0;flowT=0;$('boss').hidden=true}
+  player.hp=maxHp();player.st=maxSt();player.potions=maxPot();player.atk=null;player.drink=0;flowT=0;$('boss').hidden=true;
+  if(state.depth===3)setTimeout(()=>flash("Plus aucun gobelin. Juste lui.","Le Rampant ne peut pas mourir ici. Frappe-le pour le faire fuir, et trouve la trappe : elle est déjà ouverte.",7),4300)}
 
 // =====================================================================
 //  Champ de poursuite (BFS depuis le joueur)
@@ -858,7 +869,9 @@ function resolveHit(heavy){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.ya
     const dmg=(heavy?46:21)*dmgMul()*rr(0.92,1.08);damageGoblin(g,dmg,heavy,dx/(d||1),dz/(d||1));hit=true}
   if(hit){hitstop=heavy?0.1:0.055;player.shake=Math.max(player.shake,heavy?0.5:0.28);rumble(heavy?0.2:0.1,heavy?0.9:0.5,heavy?0.6:0.4);sHit(heavy)}}
 function damageGoblin(g,dmg,heavy,nx,nz){g.hp-=dmg;g.flash=0.13;
-  if(g.kind==='rampant'){bleed(g.x,0.6,g.z,heavy?18:10,nx,nz);if(g.hp<=0){killGoblin(g);return}g.kx=nx*6;g.kz=nz*6;sRampHiss(g);g.state='flee';g.t=g.teaser?3:rr(0.7,1.1);g.hits=0;return}
+  if(g.kind==='rampant'){bleed(g.x,1.0,g.z,heavy?18:10,nx,nz);if(g.invuln)g.hp=g.maxHp;else if(g.hp<=0){killGoblin(g);return}
+    g.kx=nx*6;g.kz=nz*6;g.hits=0;if(g.state==='watch'){g.x=g.cx;g.z=g.cz}
+    if(g.invuln||heavy){g.state='flee';g.retreat=false;g.t=rr(3,4.5);sRampScream(g,0.9);flash(g.invuln?'Il fuit… pour l\'instant.':'Il recule.','',2)}else{g.state='flee';g.retreat=true;g.t=rr(0.6,0.9);sRampHiss(g)}return}
   alertGob(g,true);bleed(g.x,g.h*0.8,g.z,heavy?22:12,nx,nz);
   if(g.hp<=0){killGoblin(g);return}
   const kb=heavy?5:2.6;g.kx=nx*kb/(g.boss?3:1);g.kz=nz*kb/(g.boss?3:1);sGobHurt(g);
@@ -888,41 +901,44 @@ function alertGob(g,silent){if(g.state==='dead'||g.kind==='rampant')return;if(g.
 function stepToward(g,field,ascend){const ti=tileOf(g.x),tj=tileOf(g.z);let bv=field[idx(ti,tj)];if(bv<0)bv=ascend?-1:9999;let best=null;
   for(const[a,b]of[[1,0],[-1,0],[0,1],[0,-1]]){const ni=ti+a,nj=tj+b;if(!walkG(ni,nj))continue;const fv=field[idx(ni,nj)];if(fv<0)continue;if(ascend?fv>bv:fv<bv){bv=fv;best=[ni,nj]}}
   if(!best)return null;const ex=(best[0]+0.5)*T-g.x,ez=(best[1]+0.5)*T-g.z,ed=Math.hypot(ex,ez)||1;return[ex/ed,ez/ed]}
-function findPeek(g){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);
-  for(let k=0;k<80;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(!walkG(i,j))continue;const x=(i+0.5)*T,z=(j+0.5)*T,dx=x-player.x,dz=z-player.z,d=Math.hypot(dx,dz);
-    if(d<7||d>14)continue;const dot=(dx*fx+dz*fz)/d;if(dot>0.45||dot<-0.3)continue;if(!losClear(x,z,player.x,player.z))continue;
-    const walls=[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>!seeThrough(i+a,j+b));if(walls.length<1)continue;const w=walls[Math.random()*walls.length|0];
-    return{x:x+w[0]*0.55,z:z+w[1]*0.55}}return null}
-function updateRampant(g,dt,dx,dz,d,pInCamp){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);const los=d<20&&losClear(g.x,g.z,player.x,player.z);
-  const watched=los&&d>0.1&&((-dx)*fx+(-dz)*fz)/d>0.9;const seenByPlayer=los&&d>0.1&&((-dx)*fx+(-dz)*fz)/d>0.45;
-  let mv=null,sp=0;g.snd-=dt;
+function findCorner(){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);
+  for(let k=0;k<150;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(!walkG(i,j))continue;
+    const wx=!seeThrough(i-1,j)?-1:!seeThrough(i+1,j)?1:0,wz=!seeThrough(i,j-1)?-1:!seeThrough(i,j+1)?1:0;if(!wx||!wz)continue;
+    const x=(i+0.5)*T,z=(j+0.5)*T,dx=x-player.x,dz=z-player.z,d=Math.hypot(dx,dz);if(d<6||d>15)continue;if((dx*fx+dz*fz)/d>0.4)continue;if(!losClear(x,z,player.x,player.z))continue;
+    return{cx:x,cz:z,x:x+wx*0.6,z:z+wz*0.6}}return null}
+function startHunt(g,scream){g.state='hunt';g.huntT=rr(14,22);g.hits=0;g.field=null;if(scream){sRampScream(g,1.7);player.shake=Math.max(player.shake,0.4);rumble(0.5,0.9,0.9)}}
+function updateRampant(g,dt,dx,dz,d,pInCamp){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);const los=d<22&&losClear(g.x,g.z,player.x,player.z);
+  const look=los&&d>0.1?((-dx)*fx+(-dz)*fz)/d:-1;let mv=null,sp=0;g.snd-=dt;g.scr-=dt;
+  g.y=lerp(g.y||0,g.state==='watch'?1.0:0,Math.min(1,dt*(g.state==='watch'?4:12)));
+  const free=!pInCamp&&!player.dead;
   switch(g.state){
-  case'roam':{if(!g.field||g.pathT<=0||(g.field[idx(tileOf(g.x),tileOf(g.z))]===0)){g.pathT=rr(10,18);for(let k=0;k<40;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(walkG(i,j)&&Math.hypot((i+0.5)*T-g.x,(j+0.5)*T-g.z)>12){g.field=bfs(i,j,walkG);break}}}
-      g.pathT-=dt;if(g.field){mv=stepToward(g,g.field,false);sp=2.7}
-      if(g.snd<=0){g.snd=rr(5,10);sGollum(g,0.9)}
-      g.watchT-=dt;if(g.watchT<=0&&!pInCamp&&!player.dead&&!seenByPlayer){const p=findPeek(g);if(p){g.x=p.x;g.z=p.z;g.state='watch';g.t=0;g.seen=0;g.watchT=g.teaser?rr(35,60):rr(18,32)}else g.watchT=3}
-      if(!g.teaser&&!pInCamp&&!player.dead&&(d<3||(los&&d<8&&!seenByPlayer)||(d<player.noise*0.8&&los))){g.state='hunt';sRampShriek(g)}
+  case'roam':{if(!g.field||g.pathT<=0||g.field[idx(tileOf(g.x),tileOf(g.z))]===0){g.pathT=rr(10,18);for(let k=0;k<40;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(walkG(i,j)&&Math.hypot((i+0.5)*T-g.x,(j+0.5)*T-g.z)>12){g.field=bfs(i,j,walkG);break}}}
+      g.pathT-=dt;if(g.field){mv=stepToward(g,g.field,false);sp=3.1}
+      if(g.snd<=0){g.snd=rr(4,8);sGollum(g,1.2)}
+      if(g.scr<=0){g.scr=rr(10,20);sRampScream(g,1.2)}
+      g.watchT-=dt;if(g.watchT<=0&&free&&look<0.45){const c=findCorner();if(c){Object.assign(g,c);g.y=1.0;g.state='watch';g.t=0;g.seen=0;g.breath=false}else g.watchT=2}
+      if(free&&(d<3.5||d<player.noise*0.7))startHunt(g,true);
       break}
-  case'watch':{g.t+=dt;if(g.t>1.2&&!g.cleared){g.cleared=true;sGollum(g,0.6)}if(watched&&d<16)g.seen+=dt;
-      if(g.seen>0.8||d<5.5||g.t>8||pInCamp){g.cleared=false;if(!g.teaser&&!pInCamp&&Math.random()<0.55){g.state='hunt';sRampShriek(g)}else{g.state='flee';g.t=g.teaser?2.5:1.5;sRampHiss(g)}}
-      else if(!los&&g.t>1.5){g.state='roam';g.cleared=false}break}
-  case'flee':{g.t-=dt;if(flow){mv=stepToward(g,flow,true);sp=7.2}
-      if(g.t<=0&&(!los||d>14)){if(g.teaser){for(let k=0;k<40;k++){const i=1+(Math.random()*(W-2)|0),j=1+(Math.random()*(H-2)|0);if(walkG(i,j)&&Math.hypot((i+0.5)*T-player.x,(j+0.5)*T-player.z)>18&&!losClear((i+0.5)*T,(j+0.5)*T,player.x,player.z)){g.x=(i+0.5)*T;g.z=(j+0.5)*T;break}}g.state='roam';g.field=null}
-        else{g.state=pInCamp?'roam':'hunt';g.field=null}}
-      else if(g.t<=0&&!g.teaser&&!pInCamp){g.state='hunt'}break}
-  case'hunt':{if(pInCamp||player.dead){g.state='flee';g.t=1.5;break}
-      if(d<1.7&&los){g.state='windup';g.t=0.22;sRampHiss(g);break}
-      if(los&&d<6)mv=[dx/d,dz/d];else if(flow)mv=stepToward(g,flow,false);sp=g.speed;
-      if(g.snd<=0){g.snd=rr(1.3,2.6);sGollum(g,1.2)}break}
-  case'windup':{g.t-=dt;if(g.t<=0){g.state='strike';g.t=0.14;g.kx=dx/(d||1)*7;g.kz=dz/(d||1)*7;if(d<2.1&&losClear(g.x,g.z,player.x,player.z))hurtPlayer(g.dmg,g)}break}
-  case'strike':{g.t-=dt;if(g.t<=0){g.hits++;if(g.hits>=2){g.hits=0;g.state='flee';g.t=rr(0.8,1.3)}else{g.state='recover';g.t=0.22}}break}
+  case'watch':{g.t+=dt;if(look>0.86&&d<18)g.seen+=dt;if(g.t>1.2&&!g.breath){g.breath=true;sGollum(g,0.45)}
+      if(free&&(g.seen>0.2||d<4)){g.x=g.cx;g.z=g.cz;startHunt(g,true)}
+      else if(!free||g.t>16){g.x=g.cx;g.z=g.cz;g.state='roam';g.watchT=rr(8,14)}
+      break}
+  case'flee':{g.t-=dt;if(flow){mv=stepToward(g,flow,true);sp=7.6}
+      if(g.t<=0){if(g.retreat&&free){g.retreat=false;g.state='hunt';g.huntT=Math.max(g.huntT||0,4)}else if(!los||d>12){g.state='roam';g.field=null;g.watchT=rr(8,15)}}break}
+  case'hunt':{g.huntT-=dt;if(!free){g.state='flee';g.retreat=false;g.t=2;break}
+      if(g.huntT<=0&&!los){g.state='roam';g.field=null;g.watchT=rr(6,12);break}
+      if(d<2.1&&los){g.state='windup';g.t=0.3;sRampHiss(g);break}
+      if(los&&d<7)mv=[dx/d,dz/d];else if(flow)mv=stepToward(g,flow,false);sp=g.speed;
+      if(g.snd<=0){g.snd=rr(0.9,1.8);sGollum(g,1.5)}if(g.scr<=0){g.scr=rr(5,9);sRampScream(g,1.3)}break}
+  case'windup':{g.t-=dt;if(g.t<=0){g.state='strike';g.t=0.16;g.kx=dx/(d||1)*7;g.kz=dz/(d||1)*7;if(d<2.7&&losClear(g.x,g.z,player.x,player.z))hurtPlayer(g.dmg,g)}break}
+  case'strike':{g.t-=dt;if(g.t<=0){g.hits++;if(g.hits>=2){g.hits=0;g.state='flee';g.retreat=true;g.t=rr(0.9,1.4)}else{g.state='recover';g.t=0.25}}break}
   case'recover':{g.t-=dt;if(g.t<=0)g.state='hunt';break}
   default:g.state='roam'}
   let moving=false;if(mv&&sp>0){moveEnt(g,mv[0]*sp*dt,mv[1]*sp*dt,g.radius,walkG);moving=true}
-  g.step-=dt;if(moving&&g.step<=0){g.step=sp>5?0.1:0.2;if(d<22)sRampStep(g)}
-  g.anim+=dt*(moving?(sp>5?16:7):0);let fr=moving?((g.anim|0)%2):0;if(g.state==='windup'||g.state==='strike')fr=2;
+  g.step-=dt;if(moving&&g.step<=0){g.step=sp>5?0.11:0.22;if(d<26)sRampStep(g)}
+  g.anim+=dt*(moving?(sp>5?15:7):0);let fr=moving?((g.anim|0)%2):0;if(g.state==='windup'||g.state==='strike'||g.state==='watch')fr=2;
   if(fr!==g.frame){g.frame=fr;g.mat.map=g.tex[fr];g.eyes.material.map=g.eyeTex[fr]}
-  const fl=g.flash>0;g.mat.emissive.setRGB(fl?0.9:0,fl?0.85:0,fl?0.8:0);g.mesh.position.set(g.x,0,g.z);
+  const fl=g.flash>0;g.mat.emissive.setRGB(fl?0.9:0,fl?0.85:0,fl?0.8:0);g.mesh.position.set(g.x,g.y,g.z);
   g.eyes.material.opacity=g.state==='watch'?1:0.85+0.15*Math.sin(state.time*5)}
 function updateGoblins(dt){const ptx=tileOf(player.x),ptz=tileOf(player.z);const pInCamp=inB(ptx,ptz)&&zone[idx(ptx,ptz)]===1;
   for(const g of goblins){if(g.state==='dead')continue;const dx=player.x-g.x,dz=player.z-g.z,d=Math.hypot(dx,dz);
@@ -1016,7 +1032,7 @@ function openPause(){if(state.mode!=='play')return;showMenu({title:'Pause',sub:(
   {label:()=>'Reprendre',act:()=>closeMenu()},
   {label:()=>'Sensibilité caméra',right:()=>'◀ '+state.sens+' ▶',lr:d=>{state.sens=clamp(state.sens+d,1,10)},act:()=>{state.sens=state.sens%10+1},desc:()=>'Gauche / droite pour régler.'},
   {label:()=>'Inverser l\'axe vertical',right:()=>state.invertY?'Oui':'Non',act:()=>{state.invertY=!state.invertY},lr:()=>{state.invertY=!state.invertY}},
-  {label:()=>"Passer à l'étage suivant (test)",act:()=>{state.depth++;closeMenu();newFloor();flash('Étage '+state.depth,state.depth>=3?"Quelque chose se racle la gorge dans le noir…":'Les gobelins sont plus nombreux et plus féroces.',4)},desc:()=>"Pour tester : le Rampant chasse à partir de l'étage 3."},
+  {label:()=>"Passer à l'étage suivant (test)",act:()=>{state.depth++;closeMenu();newFloor();flash('Étage '+state.depth,state.depth===3?"Le silence. Puis quelque chose se racle la gorge…":'Les gobelins sont plus nombreux et plus féroces.',4)},desc:()=>"Pour tester : l'étage 3 n'abrite que le Rampant."},
   {label:()=>'Configurer la manette',act:()=>openPadCfg(),desc:()=>'Si un bouton ou un stick ne répond pas, refais la correspondance touche par touche.'},
   {label:()=>'Volume',right:()=>'◀ '+Math.round((AU.master?AU.master.gain.value:0.9)*10)+' ▶',lr:d=>{if(AU.master)AU.master.gain.value=clamp(AU.master.gain.value+d*0.1,0,1.5)},desc:()=>'Gauche / droite pour régler.'}],
   foot:()=>`${kbd('confirm')} Choisir &nbsp; ${kbd('back')} Reprendre`})}
@@ -1033,7 +1049,7 @@ function update(dt){state.time+=dt;
   if(state.mode==='padcfg'){cfgUpdate();return}
   if(state.mode==='title'){if(pad.rawPressed&&titleReady())startGame();return}
   if(state.mode==='dead'){if(!$('dead').hidden&&(pp(0)||kp('Enter')||kp('KeyE')||kp('Space')||mp(0)))respawn();return}
-  if(state.mode==='win'){if(pp(0)||kp('Enter')||kp('KeyE')||kp('Space')||mp(0)){state.depth++;$('win').hidden=true;newFloor();state.mode='play';flash('Étage '+state.depth,state.depth===3?"Quelque chose se racle la gorge dans le noir…":'Les gobelins sont plus nombreux et plus féroces.',4);if(lastDevice==='kb')lockPointer()}return}
+  if(state.mode==='win'){if(pp(0)||kp('Enter')||kp('KeyE')||kp('Space')||mp(0)){state.depth++;$('win').hidden=true;newFloor();state.mode='play';flash('Étage '+state.depth,state.depth===3?"Le silence. Puis quelque chose se racle la gorge…":'Les gobelins sont plus nombreux et plus féroces.',4);if(lastDevice==='kb')lockPointer()}return}
   if(state.mode==='menu'){menuUpdate();return}
   if(pp(9)||kp('Escape')){openPause();return}
   if(hitstop>0){hitstop-=dt;return}
@@ -1129,7 +1145,7 @@ function render(dt){
   flameT-=dt;if(flameT<=0){flameT=0.075;drawFlame(flameCanvas,state.time,false);flameTex.needsUpdate=true;drawFlame(fireCanvas,state.time*0.8+3,true);fireTex.needsUpdate=true}
   // billboards
   const cx=camera.position.x,cz=camera.position.z;for(const b of billboards)b.rotation.y=Math.atan2(cx-b.position.x,cz-b.position.z);
-  for(const g of goblins){const a=Math.atan2(cx-g.x,cz-g.z);g.mesh.rotation.y=a;g.eyes.rotation.y=a;g.eyes.position.set(g.x+Math.sin(a)*0.04,0,g.z+Math.cos(a)*0.04)}
+  for(const g of goblins){const a=Math.atan2(cx-g.x,cz-g.z);g.mesh.rotation.y=a;g.eyes.rotation.y=a;g.eyes.position.set(g.x+Math.sin(a)*0.04,g.y||0,g.z+Math.cos(a)*0.04)}
   if(level.trap.open)level.trap.glow.material.opacity=0.25+0.15*Math.sin(state.time*3);
   // vue à la première personne
   const S=SP,W2=IW/2,H2=IH/2;let sx=W2*0.42,sy=-H2+16*S,sr=0.32,tx=-W2*0.55,ty=-H2+2*S,tr=-0.1;
