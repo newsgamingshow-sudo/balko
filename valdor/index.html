@@ -173,7 +173,7 @@ fr:{title:"Arènes de Valdor",gold:"Or",wins:"Victoires",court:"Cour de Valdor",
     helm:["Capuche de cuir","Casque de fer","Heaume d'acier","Heaume runique","Couronne de Valdor"],armor:["Tunique usée","Cotte de mailles","Plastron d'acier","Armure runique","Armure de Valdor"],amulet:["Pendentif de bois","Amulette de cuivre","Talisman d'argent","Amulette runique","Cœur de Valdor"]},
   suffix:["","du loup","de braise","des anciens","du roi déchu"],
   bossN:{gob:["Grokk, chef gobelin","Petit, vif et sournois."],troll:["Troll des marais","Encaisse énormément de coups."],spectre:["Chevalier spectral","Frappe vite, esquive souvent."],dragon:["Ignaros, dragon de braise","Crache du feu sous 50 % de vie."]},
-  you:"Vous",lv:"niv.",parried:"Paré",crit:"CRITIQUE",dodge:"ESQUIVE",enraged:"ENRAGÉ !",fireBreath:"SOUFFLE DE FEU !",
+  you:"Vous",lv:"niv.",parried:"Paré",crit:"CRITIQUE",dodge:"ESQUIVE",clash:"CHOC DES LAMES !",enraged:"ENRAGÉ !",fireBreath:"SOUFFLE DE FEU !",
   lvlUp:l=>`Niveau ${l} atteint !`,winVs:(n,x,g)=>`Victoire contre <b>${n}</b> (+${x} XP, +${g} or)`,loseVs:(n,x)=>`Défaite contre <b>${n}</b> (+${x} XP)`,bossWin:n=>`<b>${n}</b> vaincu ! Un coffre vous attend.`,bossLose:n=>`Défaite face à <b>${n}</b>.`,
   victory:"Victoire !",defeat:"Défaite",xp:"Expérience",levelL:"Niveau",loot:"Butin trouvé :",openChest:"Ouvrir le coffre",cont:"Continuer",chestOf:n=>`Coffre de ${n}`,chestShakes:"Le coffre tremble…",store:"Ranger dans le sac",
   searching:"Recherche d'un adversaire…",arena:"Arène de Valdor",oppInfo:(l,p)=>`Niveau ${l} · puissance ${p}`,cmp:sl=>`Comparé à votre ${sl.toLowerCase()} actuel :`,close:"Fermer",equip:"Équiper",sell:p=>`Vendre ${p} or`,
@@ -187,7 +187,7 @@ en:{title:"Valdor Arenas",gold:"Gold",wins:"Wins",court:"Valdor Courtyard",court
     helm:["Leather Hood","Iron Helmet","Steel Helm","Runic Helm","Crown of Valdor"],armor:["Worn Tunic","Chainmail","Steel Breastplate","Runic Armor","Armor of Valdor"],amulet:["Wooden Pendant","Copper Amulet","Silver Talisman","Runic Amulet","Heart of Valdor"]},
   suffix:["","of the Wolf","of Embers","of the Ancients","of the Fallen King"],
   bossN:{gob:["Grokk, Goblin Chief","Small, quick and sneaky."],troll:["Swamp Troll","Takes a huge beating."],spectre:["Spectral Knight","Strikes fast, dodges often."],dragon:["Ignaros, Ember Dragon","Breathes fire below 50% health."]},
-  you:"You",lv:"lv.",parried:"Blocked",crit:"CRITICAL",dodge:"DODGE",enraged:"ENRAGED!",fireBreath:"FIRE BREATH!",
+  you:"You",lv:"lv.",parried:"Blocked",crit:"CRITICAL",dodge:"DODGE",clash:"BLADE LOCK!",enraged:"ENRAGED!",fireBreath:"FIRE BREATH!",
   lvlUp:l=>`Level ${l} reached!`,winVs:(n,x,g)=>`Victory against <b>${n}</b> (+${x} XP, +${g} gold)`,loseVs:(n,x)=>`Defeat against <b>${n}</b> (+${x} XP)`,bossWin:n=>`<b>${n}</b> defeated! A chest awaits.`,bossLose:n=>`Defeated by <b>${n}</b>.`,
   victory:"Victory!",defeat:"Defeat",xp:"Experience",levelL:"Level",loot:"Loot found:",openChest:"Open the chest",cont:"Continue",chestOf:n=>`${n}'s chest`,chestShakes:"The chest is shaking…",store:"Put in bag",
   searching:"Looking for an opponent…",arena:"Valdor Arena",oppInfo:(l,p)=>`Level ${l} · power ${p}`,cmp:sl=>`Compared to your current ${sl.toLowerCase()}:`,close:"Close",equip:"Equip",sell:p=>`Sell for ${p} gold`,
@@ -605,7 +605,7 @@ function audio(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioCont
 function tone(f1,f2,type,d,v,delay=0){const c=audio();if(!c)return;const t=c.currentTime+delay,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f1,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(c.destination);o.start(t);o.stop(t+d+.05)}
 let nb=null;function noise(d,f,v,delay=0){const c=audio();if(!c)return;if(!nb){nb=c.createBuffer(1,c.sampleRate*.6,c.sampleRate);const a=nb.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}
   const t=c.currentTime+delay,s=c.createBufferSource(),fl=c.createBiquadFilter(),g=c.createGain();s.buffer=nb;fl.type="bandpass";fl.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(fl).connect(g).connect(c.destination);s.start(t);s.stop(t+d+.05)}
-const SFX={swing(){noise(.12,1800,.12)},whoosh(){noise(.16,2600,.16);noise(.1,1200,.08,.04)},charge(){tone(120,420,"sawtooth",.18,.05)},clang(){tone(1480,0,"square",.12,.07);tone(2210,0,"triangle",.2,.06);noise(.06,4000,.2)},slam(){tone(90,30,"sine",.4,.45);noise(.35,250,.35)},thud(){tone(110,40,"sine",.25,.3);noise(.15,300,.2)},ko(){tone(70,30,"sine",.9,.4);noise(.6,180,.3)},blink(){tone(1800,300,"sine",.2,.08)},roar(){noise(.6,220,.3);tone(90,60,"sawtooth",.6,.12)},hit(){noise(.08,700,.3);tone(140,70,"square",.08,.1)},crit(){noise(.14,500,.4);tone(220,60,"sawtooth",.18,.14);tone(880,0,"triangle",.12,.08,.02)},
+const SFX={crash(){noise(.25,1400,.35);noise(.18,520,.28,.03);tone(160,80,"square",.1,.08)},stone(){tone(80,35,"sine",.35,.4);noise(.3,380,.32)},pot(){tone(1300,700,"triangle",.12,.08);noise(.2,2600,.25)},swing(){noise(.12,1800,.12)},whoosh(){noise(.16,2600,.16);noise(.1,1200,.08,.04)},charge(){tone(120,420,"sawtooth",.18,.05)},clang(){tone(1480,0,"square",.12,.07);tone(2210,0,"triangle",.2,.06);noise(.06,4000,.2)},slam(){tone(90,30,"sine",.4,.45);noise(.35,250,.35)},thud(){tone(110,40,"sine",.25,.3);noise(.15,300,.2)},ko(){tone(70,30,"sine",.9,.4);noise(.6,180,.3)},blink(){tone(1800,300,"sine",.2,.08)},roar(){noise(.6,220,.3);tone(90,60,"sawtooth",.6,.12)},hit(){noise(.08,700,.3);tone(140,70,"square",.08,.1)},crit(){noise(.14,500,.4);tone(220,60,"sawtooth",.18,.14);tone(880,0,"triangle",.12,.08,.02)},
   dodge(){noise(.1,3200,.08)},fire(){noise(.5,400,.3)},win(){[0,4,7,12].forEach((s,i)=>tone(392*Math.pow(2,s/12),0,"square",.22,.07,i*.11))},lose(){[7,4,0].forEach((s,i)=>tone(262*Math.pow(2,s/12),0,"triangle",.35,.1,i*.18))},
   coin(){tone(988,1318,"square",.08,.05);tone(1318,0,"square",.12,.05,.07)},chest(){noise(.3,900,.25);[0,7,12,16,19].forEach((s,i)=>tone(523*Math.pow(2,s/12),0,"triangle",.3,.1,.15+i*.07))},lvl(){[0,4,7,12,16].forEach((s,i)=>tone(523*Math.pow(2,s/12),0,"square",.25,.06,i*.08))}};
 
@@ -636,6 +636,7 @@ function tick(F,dt){
   F.air=C.fa+(C.ta-C.fa)*(s.ea?EASE[s.ea](u):e);
   if(s.spin)F.pose.rot=C.from.rot+s.spin*e;
   F.trailOn=!!s.trail;F.ghostOn=!!s.ghost;
+  if(fight)envCheck(F);if(!F.cur)return;
   if(u>=1){F.cur=null;if(s.on)s.on(F)}
 }
 // ---- Effets ----
@@ -651,7 +652,7 @@ function dmgText(x,y,txt,col,big){floaters.push({x,y,txt,col,big,t:0,vx:rnd(-40,
 function startFight(A,B,meta){
   buildArena(meta.arena);sizeFx();
   A.home=A.x=320;A.face=1;B.home=B.x=640;B.face=-1;if(B.kind==="dragon")B.home=B.x=700;
-  fight={A,B,meta,t:0,over:false,gap:.6,intro:1.1};
+  fight={A,B,meta,t:0,over:false,gap:.6,intro:1.1,settled:true};makeProps(meta.arena);
   parts=[];floaters=[];camZ=1.25;camZT=1;
   play(A,[{p:"crouch",d:.01},{p:"stance",d:.5,e:"back"}],true);
   if(B.kind!=="dragon")play(B,[{p:"crouch",d:.01},{p:"stance",d:.5,e:"back"}],true);
@@ -687,9 +688,9 @@ function land(att,def,o,heavy,launch){
     hitStop=o.crit?.13:heavy?.1:.06;shake.p=o.crit?13:heavy?10:5;punch(o.crit?1.12:1.06,ix,iy);if(o.crit)flashA=.35;
     dmgText(ix,iy-70,(o.crit?tr("crit")+"  ":"")+"-"+o.dmg,o.crit?"#ffd24a":"#ffffff",o.crit||heavy);
     if(def.kind==="dragon"){play(def,[{p:"dHit",d:.08},{p:"dIdle",d:.5,dx:-20}],true)}
-    else if(launch){play(def,[{p:"airTumble",d:.12,air:150,dx:-60,e:"out"},{p:"airTumble",d:.38,air:175,dx:-20,spin:-1.4,e:"out"}],true)}
-    else if(heavy){play(def,[{p:"hitH",d:.08,dx:-70,e:"out"},{p:"hitH",d:.18,dx:-20},{p:"stance",d:.45,e:"io"}],true);dust(def.x,GROUND,10,-def.face)}
-    else play(def,[{p:"hitL",d:.07,dx:-30,e:"out"},{p:"stance",d:.35,e:"io"}],true);
+    else if(launch){play(def,[{p:"airTumble",d:.12,air:150,dx:-60,e:"out",kb:1},{p:"airTumble",d:.38,air:175,dx:-20,spin:-1.4,e:"out",kb:1}],true)}
+    else if(heavy){const far=o.crit?-190:-120;play(def,[{p:"hitH",d:.14,dx:far,air:o.crit?50:20,e:"out",kb:1},{p:"hitH",d:.16,dx:-20,air:0,kb:1,on:F=>dust(F.x,GROUND,8,0)},{p:"stance",d:.45,e:"io"}],true);dust(def.x,GROUND,10,-def.face)}
+    else play(def,[{p:"hitL",d:.07,dx:-34,e:"out",kb:1},{p:"stance",d:.35,e:"io"}],true);
     if(!def.enraged&&def.kind&&def.hp<def.max*.5){def.enraged=true;setTimeout(()=>dmgText(def.x,GROUND-260,def.kind==="dragon"?tr("fireBreath"):tr("enraged"),"#ff6a2b",true),250)}
   }
   setHp();
@@ -700,10 +701,112 @@ function finish(att,def,ix,iy){
   slow=.22;slowT=1.1;camZT=1.3;camXT=ix;camYT=iy;flashA=.6;SFX.ko();
   setTimeout(()=>{camZT=1},900);
   if(def.kind==="dragon")play(def,[{p:"dDead",d:.9,air:0,dx:-30}],true);
-  else play(def,[{p:"hitH",d:.1,dx:-60,air:60,e:"out"},{p:"lying",d:.55,dx:-90,air:0,spin:0,ea:"in",on:F=>{dust(F.x,GROUND,16,0);shake.p=8;SFX.thud()}}],true);
+  else play(def,[{p:"hitH",d:.12,dx:-90,air:70,e:"out",kb:1},{p:"lying",d:.6,dx:-130,air:0,spin:0,ea:"in",kb:1,on:F=>{dust(F.x,GROUND,16,0);shake.p=8;SFX.thud()}}],true);
   setTimeout(()=>{if(att.kind!=="dragon")play(att,[{p:"stance",d:.3,toX:()=>att.home},{p:"victory",d:.5,e:"back"}],true);SFX[att===fight.A?"win":"lose"]()},700);
   setTimeout(()=>endFight(att===fight.A),2200/speedMul);
 }
+// =================== DÉCOR INTERACTIF ===================
+const LB=150,RB=810,PILL=[92,868];
+const STONE={court:["#141018","#3e3644","#5e5466","#82778a","#aea2b4"],forest:["#140c06","#3e2414","#5c3a1e","#7e5430","#a87a4c"],swamp:["#0e1410","#2e3a30","#46564a","#647a66","#8aa08a"],
+  crypt:["#0a0c18","#2a3048","#424a6a","#626c92","#8e98c0"],volcano:["#120808","#3a1c16","#562a20","#7a3c2c","#a85a40"]};
+const CLAY=["#1a0c06","#6a3018","#9a4a24","#c46e3c","#e8a070"];
+const PROPS_LAYOUT={court:[["barrel",210],["crate",758],["brazier",262]],forest:[["crate",222],["barrel",764]],swamp:[["barrel",218],["crate",752],["crate",790]],
+  crypt:[["urn",206],["urn",240],["urn",766]],volcano:[["brazier",222],["barrel",762]]};
+const PSIZE={barrel:[20,26],crate:[22,22],urn:[13,19],brazier:[16,22]};
+let props=[],decals=[],projs=[];
+function propSprite(type,arena){
+  return part("prop|"+type+"|"+arena,()=>{let img;
+    if(type==="pillar"){const r=STONE[arena],w=30,h=175;img=spr(w,h,(i,j)=>{
+        if(j<10||j>h-12){const ww=j<5||j>h-6?w:w-4;if(Math.abs(i+.5-w/2)>ww/2)return null;return j===4||j===h-6?r[1]:cyl(r,(i+.5)/w)}
+        if(Math.abs(i+.5-w/2)>12)return null;if((j-10)%22===0)return r[1];if(arena==="forest"&&(i*7+j*3)%11===0)return r[1];
+        if(arena==="volcano"&&(i+j*2)%37===0)return "#ff6a2b";return cyl(r,(i+.5-3)/24)},r[0])}
+    else if(type==="barrel"){const [w,h]=PSIZE.barrel,m=METAL[0];img=spr(w,h,(i,j)=>{const bulge=w/2-1.5+Math.sin(j/h*Math.PI)*1.5;if(Math.abs(i+.5-w/2)>bulge)return null;
+        if(j<2)return WOOD[3];if(j===4||j===5||j===h-6||j===h-5)return cyl(m,(i+.5)/w);if(i%5===0)return WOOD[1];return cyl(WOOD,(i+.5)/w)},WOOD[0])}
+    else if(type==="crate"){const [w,h]=PSIZE.crate;img=spr(w,h,(i,j)=>{if(i<2||j<2||i>w-3||j>h-3)return WOOD[3];if(Math.abs(i-j)<2||Math.abs(i-(w-1-j))<2)return WOOD[2];return j%6===0?WOOD[1]:WOOD[2]},WOOD[0])}
+    else if(type==="urn"){const [w,h]=PSIZE.urn;img=spr(w,h,(i,j)=>{const prof=j<3?3:j<6?2.5:j<16?w/2-.5-Math.abs(j-11)*.25:3.5;if(Math.abs(i+.5-w/2)>prof)return null;if(j===8)return "#e8b44a";return cyl(CLAY,(i+.5)/w)},CLAY[0])}
+    else if(type==="brazier"){const [w,h]=PSIZE.brazier,m=METAL[0];img=spr(w,h,(i,j)=>{const c=w/2,dx=i+.5-c;
+        if(j<7){if(Math.abs(dx)>w/2-(j<2?0:(j-2)*.6))return null;return j<2?"#ff8a3a":cyl(m,(i+.5)/w)}
+        if(Math.abs(dx)<1||Math.abs(dx-(j-7)*.35)<.8||Math.abs(dx+(j-7)*.35)<.8)return m[2];return null},m[0])}
+    return {img,px:img.width/2,py:img.height-1}});
+}
+function makeProps(arena){
+  props=[];decals=[];projs=[];
+  for(const x of PILL)props.push({type:"pillar",x,w:60,h:350,solid:true,cracks:[],arena});
+  for(const [type,x] of PROPS_LAYOUT[arena]||[]){const [w,h]=PSIZE[type];props.push({type,x,w:w*PXS,h:h*PXS,arena,broken:false,tipped:false})}
+}
+function drawProps(c,dt){
+  for(const d of decals){c.strokeStyle="rgba(10,6,12,.75)";c.lineWidth=PXS;c.beginPath();for(let k=0;k<6;k++){const a=k/6*Math.PI*2+d.s;c.moveTo(d.x,GROUND+2);c.lineTo(d.x+Math.cos(a)*d.w*.5,GROUND+2+Math.sin(a)*d.w*.12)}c.stroke()}
+  for(const p of props){
+    if(p.broken&&!p.tipped)continue;
+    const S=propSprite(p.type,p.arena);
+    if(p.type==="pillar"){putPart(c,S,p.x,GROUND+6,0,1);c.strokeStyle="#0c080e";c.lineWidth=PXS;
+      for(const k of p.cracks){c.beginPath();c.moveTo(p.x+k.d*10,k.y);for(let i=1;i<5;i++)c.lineTo(p.x+k.d*10+Math.sin(i*2.1+k.s)*12,k.y+(i-2)*14);c.stroke()}continue}
+    if(p.tipped){c.save();c.translate(p.x,GROUND);c.rotate(p.td*1.4);c.scale(PXS,PXS);c.drawImage(S.img,-S.px,-S.py);c.restore();
+      p.fireT=(p.fireT||0)+dt;if(p.fireT<3&&Math.random()<.5)addP({type:"fire",x:p.x+p.td*30,y:GROUND-8,vx:p.td*rnd(20,80),vy:-rnd(20,90),r:rnd(5,10),life:rnd(.3,.6)});continue}
+    putPart(c,S,p.x,GROUND+2,0,1);
+    if(p.type==="brazier"&&Math.random()<.45)addP({type:"fire",x:p.x+rnd(-8,8),y:GROUND-p.h+4,vx:rnd(-15,15),vy:-rnd(60,120),r:rnd(4,8),life:rnd(.25,.45)});
+  }
+  for(const q of projs){const S=propSprite(q.p.type,q.p.arena);c.save();c.translate(q.x,q.y);c.rotate(q.rot);c.scale(PXS,PXS);c.drawImage(S.img,-S.px,-S.img.height/2);c.restore()}
+}
+function chunks(x,y,cols,n,dir){for(let i=0;i<n;i++)addP({type:"chunk",x:x+rnd(-12,12),y:y+rnd(-20,10),vx:(dir||0)*rnd(100,380)+rnd(-160,160),vy:-rnd(150,520),rot:rnd(0,6),vr:rnd(-14,14),w:rnd(4,12),h:rnd(3,7),col:pick(cols),life:rnd(1.1,1.8)})}
+function breakProp(p,dir){
+  if(p.broken)return;p.broken=true;shake.p=Math.max(shake.p,7);
+  if(p.type==="brazier"){p.tipped=true;p.td=dir||1;SFX.stone();sparks(p.x,GROUND-30,"#ff8a3a",26,-Math.PI/2,520);return}
+  const cols=p.type==="urn"?[CLAY[2],CLAY[3],CLAY[1]]:[WOOD[1],WOOD[2],WOOD[3],METAL[0][2]];
+  chunks(p.x,GROUND-p.h/2,cols,p.type==="urn"?14:22,dir);dust(p.x,GROUND,8,dir);p.type==="urn"?SFX.pot():SFX.crash();
+}
+function wallSplat(F,p){
+  const side=p.x<VW/2?1:-1,wx=p.x+side*(p.w/2+18);F.x=wx;F.cur=null;F.tl=[];
+  p.cracks.push({y:GROUND-F.air-110,d:-side,s:Math.random()*9});if(p.cracks.length>6)p.cracks.shift();
+  hitStop=.09;shake.p=11;SFX.stone();chunks(wx-side*10,GROUND-F.air-110,STONE[p.arena].slice(1,4),12,side);dust(wx,GROUND-F.air-60,10,side);
+  const face=F.face;
+  play(F,[{p:"hitH",d:.07,air:Math.max(F.air,30)},{p:"airTumble",d:.22,air:0,toX:()=>wx+side*70,ea:"in",on:G=>dust(G.x,GROUND,8,0)},{p:"crouch",d:.22,spin:0},{p:"stance",d:.3}],true);
+  F.face=face;
+}
+// collisions pendant les projections
+function envCheck(F){
+  if(F.kind==="dragon"||!F.cur)return;const s=F.cur.s;
+  if(s.kb){for(const p of props){if(p.broken||F.cur===null)continue;if(Math.abs(F.x-p.x)<p.w/2+16&&F.air<p.h){
+      if(p.solid){wallSplat(F,p);return}breakProp(p,F.x>p.x?1:-1)}}}
+  F.x=clamp(F.x,LB,RB);
+}
+function stepProjs(dt){
+  for(let i=projs.length-1;i>=0;i--){const q=projs[i];q.vy+=1300*dt;q.x+=q.vx*dt;q.y+=q.vy*dt;q.rot+=q.vr*dt;
+    if(q.y>GROUND-q.p.h/2){q.y=GROUND-q.p.h/2;q.vy*=-.35;q.vx*=.85}
+    const d=q.def;
+    if(!q.dodged&&q.o.kind==="dodge"&&Math.abs(q.x-d.x)<240){q.dodged=1;dodge(d,q.att)}
+    const hitDef=q.o.kind!=="dodge"&&Math.abs(q.x-d.x)<46&&!d.dead;
+    const hitWall=q.x<LB-30||q.x>RB+30||Math.abs(q.vx)<60;
+    if(hitDef||hitWall){q.p.broken=false;q.p.x=q.x;breakProp(q.p,Math.sign(q.vx)||1);if(hitDef)land(q.att,d,q.o,true);projs.splice(i,1)}
+  }
+}
+function crater(x){decals.push({x,w:rnd(70,110),s:Math.random()*3});if(decals.length>8)decals.shift()}
+// Replacement des combattants après chaque échange : le combat se déplace dans l'arène
+function settle(){
+  const {A,B}=fight,L=A.x<=B.x?A:B,R=L===A?B:A,mid=clamp((A.x+B.x)/2,LB+160,RB-160);
+  if(L.kind!=="dragon")L.home=clamp(Math.min(L.x,mid-150),LB,RB-300);
+  if(R.kind!=="dragon")R.home=clamp(Math.max(R.x,mid+150),LB+300,RB);
+  L.face=1;R.face=-1;
+}
+const MOVES_ENV={
+  wall(att,def){const wx=att.face>0?PILL[0]+52:PILL[1]-52;if(Math.abs(att.x-wx)>330)return null;const o=outcome(att,def,1.35,true);
+    return [{p:"dash",d:.2,toX:()=>wx,ghost:1,start:F=>{F.face=-F.face;dust(F.x,GROUND,6,-F.face);SFX.whoosh()}},
+      {p:"kickLoad",d:.08,air:90,toX:()=>wx+(att.x<VW/2?-14:14),start:()=>{}},
+      {p:"tuck",d:.34,air:240,toX:()=>def.x-(def.x>wx?1:-1)*95,spin:Math.PI*2,ghost:1,e:"out",start:F=>{F.face=def.x>F.x?1:-1;SFX.thud();dust(wx+(F.face>0?-30:30),GROUND-90,8,F.face);SFX.whoosh();if(o.kind==="dodge")dodge(def,att)}},
+      {p:"windup",d:.06,air:245,trail:1},
+      {p:"slam",d:.12,air:0,trail:1,ea:"in",on:F=>{shock(F.x+F.face*50);crater(F.x+F.face*50);dust(F.x+F.face*50,GROUND,16,0);SFX.slam();land(att,def,o,true)}},
+      {p:"slam",d:.2},back(att)]},
+  clash(att,def){if(def.kind)return null;const o=outcome(att,def,1.2,false);
+    const lock=[];for(let i=0;i<4;i++)lock.push({p:"block",d:.17,dx:i%2?-12:14,start:F=>{const mx=(F.x+def.x)/2;sparks(mx,GROUND-150,"#ffe08a",12,undefined,420);SFX.clang();shake.p=3;if(i===0)dmgText(mx,GROUND-260,tr("clash"),"#ffe08a",true)}});
+    return [{p:"ready",d:.1},{p:"dash",d:.14,toX:reachX(att,def,62),ghost:1,start:()=>{SFX.whoosh();play(def,[{p:"block",d:.14,dx:24},{p:"block",d:.9}],true)}},
+      ...lock,{p:"horizStart",d:.08,dx:-16},{p:"horiz",d:.07,trail:1,dx:20,e:"in",on:()=>land(att,def,o,true)},{p:"horiz",d:.12},back(att)]},
+  throwProp(att,def){const p=props.find(p=>!p.broken&&!p.solid&&p.type!=="brazier"&&Math.abs(p.x-att.x)<320&&(def.x-p.x)*att.face>90&&(p.x-att.x)*att.face>-80);if(!p)return null;
+    const o=outcome(att,def,1.1,true);
+    return [{p:"dash",d:.18,toX:()=>p.x-att.face*58,ghost:1,start:()=>SFX.whoosh()},{p:"kickLoad",d:.09},
+      {p:"kick",d:.07,dx:10,on:F=>{p.broken=true;projs.push({p,x:p.x,y:GROUND-p.h/2,vx:F.face*950,vy:-300,rot:0,vr:F.face*14,att,def,o});SFX.thud();dust(p.x,GROUND,6,F.face)}},
+      {p:"stance",d:.3},back(att)]}
+};
+
 // ---- Chorégraphies ----
 function reachX(att,def,dist){return ()=>def.x-att.face*dist*(att.look.k||1)*BODY}
 function back(att){return {p:"stance",d:.4,toX:()=>att.home,e:"io",start:F=>{dust(F.x,GROUND,5,-F.face)}}}
@@ -729,13 +832,13 @@ const MOVES={
     const steps=[{p:"ready",d:.1},{p:"dash",d:.13,toX:reachX(att,def,80),ghost:1,start:F=>{dust(F.x,GROUND,6,-F.face);SFX.whoosh()}},
       {p:"slashUpStart",d:.08,trail:1},{p:"slashUp",d:.08,trail:1,air:30,e:"in",on:()=>land(att,def,o1,false,launches)}];
     if(launches)steps.push({p:"tuck",d:.22,air:220,toX:()=>def.x-att.face*70,ghost:1,start:()=>SFX.whoosh()},{p:"windup",d:.09,air:230,trail:1},
-      {p:"slam",d:.13,air:0,trail:1,ea:"in",start:()=>{play(def,[{p:"airTumble",d:.13,air:0,dx:-10,ea:"in"}],true)},on:F=>{shock(def.x);dust(def.x,GROUND,18,0);SFX.slam();land(att,def,o2,true);if(!def.dead)play(def,[{p:"lying",d:.08,air:22},{p:"lying",d:.18,air:0},{p:"crouch",d:.25,spin:0},{p:"stance",d:.3}],true)}},
+      {p:"slam",d:.13,air:0,trail:1,ea:"in",start:()=>{play(def,[{p:"airTumble",d:.13,air:0,dx:-10,ea:"in"}],true)},on:F=>{shock(def.x);crater(def.x);dust(def.x,GROUND,18,0);SFX.slam();land(att,def,o2,true);if(!def.dead)play(def,[{p:"lying",d:.08,air:22},{p:"lying",d:.18,air:0},{p:"crouch",d:.25,spin:0},{p:"stance",d:.3}],true)}},
       {p:"slam",d:.15});
     else steps.push({p:"slashUp",d:.1,air:0});
     steps.push(back(att));return steps},
   heavy(att,def){const o=outcome(att,def,1.45,true);
     return [{p:"crouch",d:.2,dx:-10,start:F=>{SFX.charge();ring(F.x,GROUND-60,att.look.wcol,50)}},{p:"windup",d:.18,air:120,toX:reachX(att,def,85),ghost:1,e:"out",start:()=>{SFX.whoosh();if(o.kind==="dodge")dodge(def,att)}},
-      {p:"slam",d:.12,air:0,trail:1,ea:"in",on:F=>{shock(F.x+F.face*60);dust(F.x+F.face*60,GROUND,16,0);SFX.slam();land(att,def,o,true)}},
+      {p:"slam",d:.12,air:0,trail:1,ea:"in",on:F=>{shock(F.x+F.face*60);crater(F.x+F.face*60);dust(F.x+F.face*60,GROUND,16,0);SFX.slam();land(att,def,o,true)}},
       {p:"slam",d:.22},back(att)]},
   blink(att,def){const o=outcome(att,def,1.1,false);// spectre : disparaît et réapparaît dans le dos
     return [{p:"crouch",d:.12,start:F=>{sparks(F.x,GROUND-90,"#8fd0ff",24,undefined,300);SFX.blink()}},
@@ -743,7 +846,7 @@ const MOVES={
       {p:"windup",d:.08,start:F=>{F.vanish=0;F.face*=-1;sparks(F.x,GROUND-90,"#8fd0ff",24,undefined,300)}},
       {p:"slashDown",d:.08,trail:1,e:"in",on:()=>land(att,def,o,true)},
       {p:"slashDown",d:.12},{p:"crouch",d:.1,start:F=>{sparks(F.x,GROUND-90,"#8fd0ff",20,undefined,300)}},
-      {p:"stance",d:.06,toX:()=>att.home,start:F=>{F.vanish=1}},{p:"stance",d:.2,start:F=>{F.vanish=0;F.face=F===fight.A?1:-1;sparks(F.x,GROUND-90,"#8fd0ff",20,undefined,300)}}]},
+      {p:"stance",d:.06,toX:()=>att.home,start:F=>{F.vanish=1}},{p:"stance",d:.2,start:F=>{F.vanish=0;F.face=(F===fight.A?fight.B:fight.A).x>F.x?1:-1;sparks(F.x,GROUND-90,"#8fd0ff",20,undefined,300)}}]},
   bite(att,def){const o=outcome(att,def,1.15,true);
     return [{p:"dRear",d:.25,dx:-30,start:()=>SFX.roar()},{p:"dBite",d:.12,toX:()=>def.x+170,e:"in",start:()=>{if(o.kind==="dodge")dodge(def,att)},on:()=>land(att,def,o,true)},{p:"dIdle",d:.45,toX:()=>att.home,e:"io"}]},
   fire(att,def){const o=outcome(att,def,1.25,true);
@@ -751,6 +854,8 @@ const MOVES={
 };
 function dodge(def,att){if(def.kind==="dragon")return;SFX.dodge();play(def,[{p:"tuck",d:.3,air:120,dx:-120,spin:-Math.PI*2,ghost:1,e:"out"},{p:"crouch",d:.14,air:0,ea:"in",on:F=>dust(F.x,GROUND,6,0)},{p:"stance",d:.3,toX:()=>def.home,e:"io"}],true);setTimeout(()=>dmgText(def.x,GROUND-230,tr("dodge"),"#bfe3ff",true),120)}
 function chooseMove(F){
+  if(!F.kind||F.kind==="goblin"){const r=Math.random();if(r<.16)return "wall";if(r<.3)return "throwProp";if(r<.42)return "clash"}
+  if(F.kind==="troll"&&Math.random()<.25)return "throwProp";
   if(F.kind==="dragon")return F.enraged&&Math.random()<.55?"fire":Math.random()<.3?"fire":"bite";
   if(F.kind==="spectre")return pick(["blink","blink","combo","dash"]);
   if(F.kind==="troll")return pick(["heavy","heavy","dash","kick"]);
@@ -763,15 +868,20 @@ function chooseMove(F){
 function step(dt){
   if(!fight)return;const {A,B}=fight;fight.t+=dt;
   for(const F of [A,B]){tick(F,dt);F.flash=Math.max(0,F.flash-dt);
-    if(!busy(F)&&!F.dead&&F.kind!=="dragon"&&!fight.over){F.idleT+=dt;F.pose.lean=POSE.stance.lean+Math.sin(F.idleT*3)*.04;F.pose.lF2=POSE.stance.lF2+Math.sin(F.idleT*3)*.06;F.x+=(F.home-F.x)*Math.min(1,dt*6)}
+    if(!busy(F)&&!F.dead&&F.kind!=="dragon"&&!fight.over){F.idleT+=dt;const walk=Math.abs(F.home-F.x)>4;F.pose.lean=POSE.stance.lean+Math.sin(F.idleT*3)*.04;F.pose.lF2=POSE.stance.lF2+Math.sin(F.idleT*3)*.06;
+      if(walk){const w=Math.sin(F.idleT*14);F.pose.lF1=POSE.stance.lF1+w*.45;F.pose.lB1=POSE.stance.lB1-w*.45}else{F.pose.lF1+=(POSE.stance.lF1-F.pose.lF1)*.2;F.pose.lB1+=(POSE.stance.lB1-F.pose.lB1)*.2}
+      F.x+=clamp(F.home-F.x,-260*dt,260*dt)}
     if(!busy(F)&&F.kind==="dragon"&&!F.dead)F.x+=(F.home-F.x)*Math.min(1,dt*4);
   }
+  stepProjs(dt);
   if(fight.intro>0){fight.intro-=dt;return}
-  if(fight.over||busy(A)||busy(B))return;
+  if(fight.over||busy(A)||busy(B)||projs.length)return;
+  if(!fight.settled){settle();fight.settled=true;fight.gap=Math.max(fight.gap,.25)}
+  if(Math.abs(A.x-A.home)>6||Math.abs(B.x-B.home)>6){if(fight.gap<.05)fight.gap=.05}
   fight.gap-=dt;if(fight.gap>0)return;
   A.atb+=A.st.spd*dt*34;B.atb+=B.st.spd*dt*34;
   const ready=[A,B].filter(F=>F.atb>=100).sort((p,q)=>q.atb-p.atb)[0];
-  if(ready){ready.atb-=100;const def=ready===A?B:A;const m=chooseMove(ready);play(ready,MOVES[m](ready,def));fight.gap=rnd(.08,.2)}
+  if(ready){ready.atb-=100;const def=ready===A?B:A;let m=chooseMove(ready),seq=(MOVES_ENV[m]||MOVES[m])(ready,def);if(!seq){m=pick(["dash","combo","kick"]);seq=MOVES[m](ready,def)}play(ready,seq);fight.gap=rnd(.08,.2);fight.settled=false}
 }
 function endFight(heroWon){setTimeout(()=>rewards(heroWon,fight.meta),0)}
 // ---- Rendu ----
@@ -801,6 +911,8 @@ function drawParts(c,dt){
     else if(p.type==="ring"){c.strokeStyle=hexA(p.col,1-u);c.lineWidth=6*(1-u)+1;c.beginPath();c.arc(p.x,p.y,p.r*(.3+u*1.4),0,7);c.stroke()}
     else if(p.type==="star"){c.save();c.globalCompositeOperation="lighter";c.translate(p.x,p.y);c.rotate(p.rot);c.fillStyle=hexA(p.col,1-u);const R=p.r*(.6+u*.6);c.beginPath();for(let k=0;k<16;k++){const a=k/16*Math.PI*2,r=k%2?R*.18:R*(k%4?1:.6);c.lineTo(Math.cos(a)*r,Math.sin(a)*r)}c.closePath();c.fill();c.restore()}
     else if(p.type==="shock"){c.strokeStyle=`rgba(255,230,180,${1-u})`;c.lineWidth=8*(1-u);c.beginPath();c.ellipse(p.x,p.y,40+u*260,8+u*30,0,0,7);c.stroke()}
+    else if(p.type==="chunk"){p.vy+=1500*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.rot+=p.vr*dt;if(p.y>GROUND+2){p.y=GROUND+2;p.vy*=-.35;p.vx*=.6;p.vr*=.5}
+      c.save();c.globalAlpha=u>.75?(1-u)/.25:1;c.translate(p.x,p.y);c.rotate(p.rot);c.fillStyle=p.col;c.fillRect(-p.w/2,-p.h/2,p.w,p.h);c.strokeStyle="#140c10";c.lineWidth=PXS;c.strokeRect(-p.w/2,-p.h/2,p.w,p.h);c.restore()}
     else if(p.type==="fire"){p.x+=p.vx*dt;p.y+=p.vy*dt;c.save();c.globalCompositeOperation="lighter";c.fillStyle=`rgba(255,${120+((1-u)*120)|0},40,${(1-u)*.8})`;c.beginPath();c.arc(p.x,p.y,p.r*(1+u*1.5),0,7);c.fill();c.restore()}
   }
 }
@@ -815,6 +927,7 @@ function drawScene(dtReal,dtGame){
   lc.setTransform(s*z,0,0,s*z,Math.round(s*(VW/2-cx*z)+shake.x*s),Math.round(s*(VH/2-cy*z)+shake.y*s));
   const list=fight?[fight.B,fight.A]:[idleHero];
   if(!fight){idleHero.idleT+=dtReal;idleHero.pose.lean=POSE.stance.lean+Math.sin(idleHero.idleT*2.5)*.04;idleHero.pose.aF1=POSE.stance.aF1+Math.sin(idleHero.idleT*1.3)*.05;idleHero.look=heroLook()}
+  if(fight)drawProps(lc,dtGame);
   for(const F of list){const sw=(F.kind==="dragon"?150:F.kind==="troll"?60:40)*(1-Math.min(.6,F.air/400));lc.fillStyle="rgba(0,0,0,.4)";lc.beginPath();lc.ellipse(F.x,GROUND+4,sw,9,0,0,7);lc.fill()}
   for(const F of list){
     for(const g of F.ghosts||[]){const al=(1-g.a/(F.look.glow?.25:.16))*.4;if(F.kind!=="dragon")drawKnight(lc,F,g.J,al,0)}
