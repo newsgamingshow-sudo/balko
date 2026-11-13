@@ -1,4 +1,4 @@
-# L'Écho des Profondeurs (prototype v11)
+# L'Écho des Profondeurs (prototype v12)
 
 Prototype jouable d'un dungeon crawler en vue FPS : dark fantasy, rendu 3D pixelisé, horreur sonore.
 
@@ -28,7 +28,7 @@ Chaque nouveau monstre est expliqué par une note près du feu de camp.
 - Cocons de chair (étages 2 et 5) : à ouvrir à l'épée. Parfois un survivant, parfois quelque chose qui n'est plus humain.
 - Pages de journal des captifs à chaque étage, relisibles dans le coffre.
 - Rituels (étages 2, 4, 5) : tuer les cultistes avant la fin du compte à rebours pour sauver la victime sur l'autel.
-- Santé mentale : baisse dans le noir et face aux monstres. Fausses voix et pas, silhouettes qui disparaissent quand on les regarde, image déformée. Le feu de camp et l'encens la restaurent.
+- Feu de camp à entretenir : il se consume (environ 7 minutes de plein à vide, le repos en consomme). Le bois vient des caisses, des tonneaux et des bûches du donjon. Feu bas : voix, pas et silhouettes imaginaires, image déformée. Feu éteint : les monstres entrent dans le camp, impossible de se reposer avant de le rallumer (3 bûches).
 - Survivants blessés : à escorter jusqu'au feu de camp (plus lent, ils gémissent et attirent les monstres), ou à abandonner.
 
 - Caisses et tonneaux à briser : or ou objets, rangés dans le coffre du camp (inventaire).

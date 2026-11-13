@@ -18,7 +18,7 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 .bar{width:260px;height:14px;background:#160f0e;border:2px solid #2c2220;box-shadow:0 0 0 2px #000}
 .bar i{display:block;height:100%;width:100%;background:var(--blood);transition:width .12s linear}
 .bar.st i{background:var(--stamina)}
-.bar.san{height:8px}.bar.san i{background:#6c5a9c}
+.bar.san{height:8px}.bar.san i{background:#e0782a}
 #ritual{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);font-family:var(--title);font-size:26px;color:#c9493c;text-shadow:2px 2px 0 #000;white-space:nowrap}
 .bar .ghost{position:absolute}
 #inv{position:absolute;right:max(24px,env(safe-area-inset-right,0px));bottom:max(22px,env(safe-area-inset-bottom,0px));display:flex;gap:22px;font-size:28px;text-shadow:2px 2px 0 #000}
@@ -80,9 +80,9 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 
 <div class="hud" id="hud" hidden>
   <div id="dot"></div>
-  <div id="bars"><div class="bar hp"><i id="hpb"></i></div><div class="bar st"><i id="stb"></i></div><div class="bar san" title="Santé mentale"><i id="sanb"></i></div></div>
+  <div id="bars"><div class="bar hp"><i id="hpb"></i></div><div class="bar st"><i id="stb"></i></div><div class="bar san" title="Feu de camp"><i id="sanb"></i></div></div>
   <div id="ritual" hidden></div>
-  <div id="inv"><span>Fioles <b id="pot">3</b></span><span>Or <b id="gold">0</b></span></div>
+  <div id="inv"><span>Bois <b id="wood">2</b></span><span>Fioles <b id="pot">3</b></span><span>Or <b id="gold">0</b></span></div>
   <div id="prompt"></div>
   <div id="msg"></div>
   <div id="listen" hidden>· tu tends l'oreille ·</div>
@@ -93,7 +93,7 @@ html,body{height:100%;margin:0;background:var(--void);color:var(--bone);overflow
 
 <div class="overlay" id="title">
   <h1>L'Écho des<br>Profondeurs</h1>
-  <div class="tag">Écoute. Ils approchent.</div><div style="font-size:16px;color:#6d6458;margin:-18px 0 18px">prototype v11</div>
+  <div class="tag">Écoute. Ils approchent.</div><div style="font-size:16px;color:#6d6458;margin:-18px 0 18px">prototype v12</div>
   <button class="start" id="startBtn" type="button">Descendre</button>
   <div id="pad">Manette : appuie sur n'importe quel bouton pour la connecter.</div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="start small" id="testBtn" type="button">Tester la manette</button><button class="start small" id="cfgBtn" type="button">Configurer la manette</button></div>
@@ -602,7 +602,7 @@ const idx=(i,j)=>j*W+i;
 const inB=(i,j)=>i>=0&&j>=0&&i<W&&j<H;
 const tileOf=v=>Math.floor(v/T);
 function walkP(i,j){if(!inB(i,j))return false;return grid[idx(i,j)]===1}
-function walkG(i,j){if(!inB(i,j))return false;const k=idx(i,j);return grid[k]===1&&zone[k]===0}
+function walkG(i,j){if(!inB(i,j))return false;const k=idx(i,j);return grid[k]===1&&(zone[k]===0||(zone[k]===1&&state.fire<=0))}
 function seeThrough(i,j){if(!inB(i,j))return false;return grid[idx(i,j)]>0}
 function losClear(x0,z0,x1,z1){const dx=x1-x0,dz=z1-z0,d=Math.hypot(dx,dz),n=Math.ceil(d/0.3);for(let s=1;s<n;s++){const x=x0+dx*s/n,z=z0+dz*s/n;if(!seeThrough(tileOf(x),tileOf(z)))return false}return true}
 const NPCS=[
@@ -989,7 +989,7 @@ const ITEMS={
  pierre:{name:'Pierre à aiguiser',desc:'+8 % de dégâts, pour toujours.',col:0xa0a0a8,use:()=>{state.bonus.dmg+=0.08;return true}},
  coeur:{name:'Cœur séché',desc:'+10 points de vie maximum, pour toujours.',col:0x8a2030,use:()=>{state.bonus.hp+=10;player.hp+=10;return true}},
  herbe:{name:'Herbe amère',desc:"+10 d'endurance maximum, pour toujours.",col:0x60a050,use:()=>{state.bonus.st+=10;return true}}};
-ITEMS.encens={name:'Encens amer',desc:"Apaise l'esprit : +40 de santé mentale.",col:0x9a7ae0,use:()=>{if(player.san>=100)return'Ton esprit est déjà clair.';player.san=Math.min(100,player.san+40);return true}};
+ITEMS.encens={name:'Huile de lampe',desc:'Ravive le feu de camp : +30 % de feu.',col:0xe0b040,use:()=>{if(state.fire>=100)return'Le feu brûle déjà fort.';state.fire=Math.min(100,state.fire+30);return true}};
 const ITEM_POOL=['fiole','fiole','fiole','resine','pierre','coeur','herbe','encens','encens'];
 const SURV_LINES=["Merci… merci…","Ils ont emmené mes enfants plus bas.","Je croyais que personne ne viendrait.","Je connais le chemin pour remonter. Ne t'arrête pas.","Il y en a d'autres. Je les entends pleurer la nuit.","Ne regarde pas dans les trous des murs.","Ils nous gardent vivants. C'est pire."];
 
@@ -1024,7 +1024,7 @@ function genLevel(seed,depth){
       chk(bx,by);chk(bx+px,by+py);chk(bx-px,by-py);for(let k=1;k<=3;k++)for(let m=-2;m<=2;m++)chk(bx+dx*k+px*m,by+dy*k+py*m);
       if(!ok)continue;grid[idx(bx,by)]=2;zone[idx(bx,by)]=2;for(let k=1;k<=2;k++)for(let m=-1;m<=1;m++){const i=bx+dx*k+px*m,j=by+dy*k+py*m;grid[idx(i,j)]=1;zone[idx(i,j)]=2}
       cells.push({bx,by,dx,dy,px:bx+dx*2,py:by+dy*2,room:r});break}}
-  level={rooms,boss,first,cells,seed,depth,F,torches:[],chests:[],decor:[],holes:[],crates:[],chains:[],webs:[],candles:[],wallSurv:[],cocoons:[],pages:[],ritual:null};
+  level={rooms,boss,first,cells,seed,depth,F,torches:[],chests:[],decor:[],holes:[],crates:[],chains:[],webs:[],candles:[],wallSurv:[],cocoons:[],pages:[],ritual:null,woods:[]};
   // survivants enchaînés aux murs si les cellules manquent
   const wallSpot=(r)=>{for(let t=0;t<30;t++){const side=R()*4|0;let i,j,dx,dy;
       if(side===0){i=r.x+(R()*r.w|0);j=r.y;dx=0;dy=-1}else if(side===1){i=r.x+(R()*r.w|0);j=r.y+r.h-1;dx=0;dy=1}else if(side===2){i=r.x;j=r.y+(R()*r.h|0);dx=-1;dy=0}else{i=r.x+r.w-1;j=r.y+(R()*r.h|0);dx=1;dy=0}
@@ -1047,6 +1047,7 @@ function genLevel(seed,depth){
   rooms.forEach(r=>{if(R()<0.6){const s=wallSpot(r);if(s)level.chains.push({x:(s.i+0.5+s.dx*0.46)*T,z:(s.j+0.5+s.dy*0.46)*T,dx:s.dx,dy:s.dy})}
     [[r.x,r.y,1,1],[r.x+r.w-1,r.y,-1,1],[r.x,r.y+r.h-1,1,-1],[r.x+r.w-1,r.y+r.h-1,-1,-1]].forEach(([i,j,sx,sz])=>{if(R()<0.45)level.webs.push({x:(i+0.5-sx*0.5)*T,z:(j+0.5-sz*0.5)*T,sx,sz})});
     if((depth===2||depth===5)&&R()<0.5)for(let c=0;c<3;c++)level.candles.push({x:(r.x+0.5+R()*(r.w-1))*T,z:(r.y+0.5+R()*(r.h-1))*T})});
+  for(let k=0,t=0;k<6&&t<200;t++){const i=1+(R()*(W-2)|0),j=1+(R()*(H-2)|0);if(!walkG(i,j)||(i<16&&Math.abs(j-19)<4))continue;level.woods.push({x:(i+0.3+R()*0.4)*T,z:(j+0.3+R()*0.4)*T});k++}
   const key=depth<=5?depth:2+((depth-2)%4);
   if(key===2||key===5){const nc=key===2?4:3;for(let k=0,t=0;k<nc&&t<80;t++){const r=rooms[R()*rooms.length|0];if(r.first)continue;const sp=wallSpot(r);if(!sp)continue;const x=(sp.i+0.5+sp.dx*0.3)*T,z=(sp.j+0.5+sp.dy*0.3)*T;if(level.cocoons.some(c=>Math.hypot(c.x-x,c.z-z)<2.5))continue;level.cocoons.push({x,z,human:R()<0.7,seed:(seed+k*31)|0});k++}}
   {const ids=key===1?['j1','j1b']:['j'+key];ids.forEach(id=>{for(let t=0;t<40;t++){const r=rooms[R()*rooms.length|0];if(r.first||r.boss)continue;level.pages.push({x:(r.x+0.5+R()*(r.w-1))*T,z:(r.y+0.5+R()*(r.h-1))*T,id});break}})}
@@ -1120,6 +1121,7 @@ function buildLevel(){
   const wm=new THREE.MeshBasicMaterial({map:webTex,transparent:true,depthWrite:false,side:THREE.DoubleSide,opacity:0.6});
   level.webs.forEach(w=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(1.5,1.5),wm);m.position.set(w.x+w.sx*0.35,WALL_H-0.55,w.z+w.sz*0.35);m.rotation.y=Math.atan2(w.sx,w.sz);levelGroup.add(m)});
   const cdT=T_('candle',art(CANDLE));level.candles.forEach(c=>{const m=plane(0.22,0.32,new THREE.MeshBasicMaterial({map:cdT,alphaTest:0.5,side:THREE.DoubleSide}));m.position.set(c.x,0,c.z);levelGroup.add(m);billboards.push(m)});
+  const lgT=T_('logs',art(LOGS));level.woods.forEach(w=>{w.mesh=plane(0.8,0.26,litMat(lgT));w.mesh.position.set(w.x,0,w.z);levelGroup.add(w.mesh);billboards.push(w.mesh)});
   const cocT=T_('cocoon',art(COCOON,COC_PAL));level.cocoons.forEach(c=>{c.mesh=plane(1.0,1.62,litMat(cocT));c.mesh.position.set(c.x,0,c.z);levelGroup.add(c.mesh);billboards.push(c.mesh)});
   level.pages.forEach(pg=>{pg.mesh=plane(0.36,0.42,new THREE.MeshBasicMaterial({map:T_('note',art(NOTE_ART)),alphaTest:0.5,side:THREE.DoubleSide,color:0xa89870}));pg.mesh.position.set(pg.x,0.03,pg.z);levelGroup.add(pg.mesh);billboards.push(pg.mesh)});
   if(level.ritual){const RT=level.ritual;const a=plane(1.7,0.8,litMat(T_('altar',art(ALTAR))));a.position.set(RT.x,0,RT.z);levelGroup.add(a);billboards.push(a);
@@ -1316,7 +1318,7 @@ function menuNav(){let up=pp(12)||dpe('u')||kp('ArrowUp')||kp('KeyW'),down=pp(13
 //  État du jeu
 // =====================================================================
 const state={mode:'title',freed:{},up:{vit:0,end:0,blade:0,flask:0,armor:0},depth:1,kills:0,time:0,stickHeld:false,sens:5,invertY:false,tutorial:{},
-  bonus:{torch:0,dmg:0,hp:0,st:0},inv:{},notes:[],saved:0,prevMode:'play'};
+  bonus:{torch:0,dmg:0,hp:0,st:0},fire:100,wood:2,inv:{},notes:[],saved:0,prevMode:'play'};
 const player={san:100,parry:0,parryCd:0,x:0,z:0,yaw:0,pitch:0,hp:100,st:100,gold:0,potions:3,iframes:0,stDelay:0,atk:null,drink:0,dodge:0,dvx:0,dvz:0,bob:0,stepAcc:0,shake:0,hurt:0,noise:3,listen:false,inCamp:true,lowBeat:0,breathT:0,dead:false,kx:0,kz:0};
 const maxHp=()=>100+state.up.vit*25+state.bonus.hp, maxSt=()=>100+state.up.end*25+state.bonus.st, dmgMul=()=>(1+state.up.blade*0.3)*(1+state.bonus.dmg), maxPot=()=>3+state.up.flask, potHeal=()=>45+state.up.flask*10;
 let msgTimer=0;function flash(t,sub,dur){$('msg').innerHTML=t+(sub?'<small>'+sub+'</small>':'');$('msg').style.opacity=1;msgTimer=dur||3.2}
@@ -1364,7 +1366,8 @@ function resolveHit(heavy){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.ya
   if(hit){hitstop=heavy?0.1:0.055;player.shake=Math.max(player.shake,heavy?0.5:0.28);rumble(heavy?0.2:0.1,heavy?0.9:0.5,heavy?0.6:0.4);sHit(heavy);emitNoise(player.x,player.z,9,true)}}
 function breakCrate(c,loot){c.broken=true;levelGroup.remove(c.mesh);sCrate({x:c.x,z:c.z});emitNoise(c.x,c.z,13,false);
   for(let i=0;i<16;i++)debris.spawn(c.x,rr(0.2,0.7),c.z,rr(-2,2),rr(1,3.5),rr(-2,2),rr(2,5));
-  if(!loot)return;const r=Math.random();if(r<0.42){const g=rr(5,16)|0;for(let i=0;i<2;i++)dropCoin(c.x+rr(-0.3,0.3),c.z+rr(-0.3,0.3),Math.ceil(g/2))}
+  if(!loot)return;{const n=Math.random()<0.4?2:1;const got=Math.min(n,10-state.wood);if(got>0){state.wood+=got;flash('+'+got+' bois','Ramène-le au feu de camp.',1.8)}}
+  const r=Math.random();if(r<0.42){const g=rr(5,16)|0;for(let i=0;i<2;i++)dropCoin(c.x+rr(-0.3,0.3),c.z+rr(-0.3,0.3),Math.ceil(g/2))}
   else if(r<0.7)dropItem(c.x,c.z,pick(ITEM_POOL));else if(r<0.78)sRats({x:c.x,z:c.z})}
 function breakCocoon(c){c.broken=true;levelGroup.remove(c.mesh);sSquelch({x:c.x,z:c.z});bleed(c.x,1,c.z,24,0,0);emitNoise(c.x,c.z,10,false);
   if(c.human){const look=survivorLook(c.seed);const m=plane(1.2,1.4,litMat(T_(look.key+'sit',art(SURV_SIT,look))));m.position.set(c.x,0,c.z);levelGroup.add(m);billboards.push(m);
@@ -1497,7 +1500,7 @@ function startHunt(g,scream){if(g.ceil){g.ceil=false;sThud({x:g.x,z:g.z},1.2);fo
   g.state='hunt';g.huntT=rr(14,22);g.hits=0;g.field=null;if(scream){sRampRoar(g,1.8);player.shake=Math.max(player.shake,0.45);rumble(0.6,1,0.9)}}
 function rampDecor(g,dt){
   // casse les caisses sur son passage, éteint les torches, gratte le plafond
-  for(const c of level.crates){if(!c.broken&&Math.hypot(c.x-g.x,c.z-g.z)<1.1)breakCrate(c,true)}
+  for(const c of level.crates){if(!c.broken&&Math.hypot(c.x-g.x,c.z-g.z)<1.1)breakCrate(c,false)}
   for(const t of level.torches){if(t.lit&&!t.camp&&Math.hypot(t.x-g.x,t.z-g.z)<2.6){t.lit=false;if(t.flame)t.flame.visible=false;sFssh({x:t.x,z:t.z})}}
   if(g.ceil){g.dustT=(g.dustT||0)-dt;if(g.dustT<=0){g.dustT=0.12;dust.spawn(g.x+rr(-0.4,0.4),WALL_H-0.05,g.z+rr(-0.4,0.4),0,-0.3,0,rr(1.5,3))}
     g.scrT=(g.scrT||rr(1,2))-dt;if(g.scrT<=0){g.scrT=rr(1.2,2.6);sScrape({x:g.x,z:g.z},0.7)}}}
@@ -1606,7 +1609,7 @@ function updateLarva(g,dt,dx,dz,d,pInCamp){let moving=false;g.mut-=dt;if(g.mut<=
   default:g.state='hunt'}
   g.anim+=dt*(moving?12:2);setFrame(g,(g.anim|0)%2)}
 
-function updateMonsters(dt){const ptx=tileOf(player.x),ptz=tileOf(player.z);const pInCamp=inB(ptx,ptz)&&zone[idx(ptx,ptz)]===1;
+function updateMonsters(dt){const ptx=tileOf(player.x),ptz=tileOf(player.z);const pInCamp=inB(ptx,ptz)&&zone[idx(ptx,ptz)]===1&&state.fire>0;
   for(const g of goblins){if(g.state==='dead')continue;
     if(g.hidden){g.hideT-=dt;if(g.hideT<=0&&!pInCamp)emerge(g);continue}
     const dx=player.x-g.x,dz=player.z-g.z,d=Math.hypot(dx,dz);
@@ -1711,14 +1714,18 @@ function upItem(key,name,desc,maxL,req){return{label:()=>name+' '+'◆'.repeat(s
   off:()=>(req&&!state.freed[req])||state.up[key]>=maxL||player.gold<costOf(key,state.up[key]),
   desc:()=>req&&!state.freed[req]?'Libère '+NPCS.find(n=>n.id===req).name+', '+NPCS.find(n=>n.id===req).role+', pour débloquer cette amélioration.':desc,
   act:()=>{const c=costOf(key,state.up[key]);player.gold-=c;state.up[key]++;if(key==='vit')player.hp=maxHp();if(key==='end')player.st=maxSt();if(key==='flask')player.potions=maxPot();sCoin()}}}
-function openFire(){showMenu({title:'Feu de camp',sub:()=>`Or : <b style="color:var(--ember);font-weight:400">${player.gold}</b> · Survivants libérés : ${state.saved} · Monstres tués : ${state.kills}`,
-  items:[{label:()=>'Se reposer',right:()=>'',desc:()=>'Soigne tes blessures et remplit tes fioles. Le feu tient les monstres à distance.',act:()=>{player.hp=maxHp();player.st=maxSt();player.potions=maxPot();player.san=100;flash('Tu te reposes un instant','La chaleur te rend des forces.')}},
+function feedItem(){return{label:()=>state.fire<=0?'Rallumer le feu':'Alimenter le feu',right:()=>state.fire<=0?'3 bûches':'bois : '+state.wood,
+  off:()=>state.fire<=0?state.wood<3:(state.wood<1||state.fire>=100),desc:()=>state.fire<=0?'Il faut 3 bûches pour rallumer le feu.':'Chaque bûche ajoute 12 % de feu. Brise les caisses et tonneaux du donjon pour trouver du bois.',
+  act:()=>{if(state.fire<=0){state.wood-=3;state.fire=30;flowT=0;flash('Le feu reprend','Le camp est de nouveau un refuge.',3)}else{const n=Math.min(state.wood,Math.ceil((100-state.fire)/12));state.wood-=n;state.fire=Math.min(100,state.fire+n*12);flash('Tu nourris le feu','+'+(n*12)+' %',2)}sCrate({x:campObj.x,z:campObj.z})}}}
+function openFire(){if(state.fire<=0){showMenu({title:'Feu éteint',sub:()=>`Bois : ${state.wood} · il en faut 3`,items:[feedItem(),{label:()=>'Repartir',act:()=>closeMenu()}],foot:()=>`${kbd('confirm')} Choisir &nbsp; ${kbd('back')} Fermer`});return}
+  showMenu({title:'Feu de camp',sub:()=>`Or : <b style="color:var(--ember);font-weight:400">${player.gold}</b> · Feu : ${Math.round(state.fire)} % · Bois : ${state.wood} · Survivants libérés : ${state.saved}`,
+  items:[feedItem(),{label:()=>'Se reposer',right:()=>'',right:()=>'-8 % de feu',desc:()=>'Soigne tes blessures et remplit tes fioles. Le repos consume un peu de bois.',act:()=>{state.fire=Math.max(1,state.fire-8);player.hp=maxHp();player.st=maxSt();player.potions=maxPot();flash('Tu te reposes un instant','La chaleur te rend des forces.')}},
     upItem('vit','Vitalité','+25 points de vie maximum.',3),upItem('end','Endurance','+25 d\'endurance : plus de coups et d\'esquives enchaînés.',3),
     upItem('blade','Affûter la lame','+30 % de dégâts, par Brann le forgeron.',3,'forge'),upItem('armor','Renforcer l\'armure','-12 % de dégâts reçus par niveau : plaques de fer rivetées par Brann.',3,'forge'),upItem('flask','Fiole supplémentaire','+1 fiole et des soins plus puissants, par Ilse l\'herboriste.',2,'herb'),
     {label:()=>'Repartir',right:()=>'',act:()=>closeMenu()}],foot:()=>`${kbd('confirm')} Choisir &nbsp; ${kbd('back')} Fermer`})}
 function goDeeper(){state.depth++;$('win').hidden=true;$('noteOv').hidden=true;$('padTestOv').hidden=true;closeMenuSilently();newFloor();state.mode='play';if(lastDevice==='kb')lockPointer()}
 function closeMenuSilently(){$('menuOv').hidden=true;menu=null}
-function openPause(){if(state.mode!=='play')return;showMenu({title:'Pause',sub:()=>`Étage ${state.depth} · ${level.F.name} · v11`,items:[
+function openPause(){if(state.mode!=='play')return;showMenu({title:'Pause',sub:()=>`Étage ${state.depth} · ${level.F.name} · v12`,items:[
   {label:()=>'Reprendre',act:()=>closeMenu()},
   {label:()=>'Sensibilité caméra',right:()=>'◀ '+state.sens+' ▶',lr:d=>{state.sens=clamp(state.sens+d,1,10)},act:()=>{state.sens=state.sens%10+1},desc:()=>'Gauche / droite pour régler.'},
   {label:()=>'Inverser l\'axe vertical',right:()=>state.invertY?'Oui':'Non',act:()=>{state.invertY=!state.invertY},lr:()=>{state.invertY=!state.invertY}},
@@ -1800,15 +1807,16 @@ function update(dt){state.time+=dt;
   for(const c of level.cells){if(c.opening&&c.y<WALL_H){c.y+=dt*1.6;c.mesh.position.y=WALL_H/2+c.y;if(c.y>=WALL_H){c.mesh.visible=false;grid[idx(c.bx,c.by)]=1}}}
   for(let i=coins.length-1;i>=0;i--){const c=coins[i];c.t+=dt;c.vy-=9*dt;c.y=Math.max(0.12,c.y+c.vy*dt);if(c.y<=0.12)c.vy=Math.abs(c.vy)*0.3;const dx=player.x-c.x,dz=player.z-c.z,d=Math.hypot(dx,dz);
     if(d<2.2&&c.t>0.4){c.x+=dx/d*7*dt;c.z+=dz/d*7*dt}c.mesh.position.set(c.x,c.y+Math.sin(c.t*4)*0.04,c.z);if(d<0.6&&c.t>0.4){player.gold+=c.v;levelGroup.remove(c.mesh);coins.splice(i,1);sCoin();emitNoise(player.x,player.z,4,true)}}
+  for(const w of level.woods){if(w.taken)continue;if(Math.hypot(player.x-w.x,player.z-w.z)<0.9&&state.wood<10){w.taken=true;levelGroup.remove(w.mesh);state.wood=Math.min(10,state.wood+2);sCrate({x:w.x,z:w.z});flash('+2 bois','Ramène-le au feu de camp.',1.8)}}
   for(let i=drops.length-1;i>=0;i--){const o=drops[i];o.t+=dt;o.mesh.position.y=0.15+Math.sin(o.t*3)*0.05;const d=Math.hypot(player.x-o.x,player.z-o.z);
     if(d<0.8&&o.t>0.5){state.inv[o.id]=(state.inv[o.id]||0)+1;levelGroup.remove(o.mesh);drops.splice(i,1);sCoin();flash(ITEMS[o.id].name,'Rangé dans le coffre du camp.',2.5)}}
   for(let i=projectiles.length-1;i>=0;i--){const p=projectiles[i];p.life-=dt;p.x+=p.vx*dt;p.z+=p.vz*dt;p.mesh.position.set(p.x,1.05,p.z);let gone=p.life<=0;
     if(!seeThrough(tileOf(p.x),tileOf(p.z))){gone=true;sClank({x:p.x,z:p.z},false)}else if(Math.hypot(p.x-player.x,p.z-player.z)<0.6){hurtPlayer(p.dmg,p);gone=true}
     if(gone){levelGroup.remove(p.mesh);projectiles.splice(i,1)}}
   blood.update(dt,9,1.5);dust.update(dt,1.5,0.5);debris.update(dt,9,1);smoke.update(dt,-0.6,0.8);
-  if(Math.random()<dt*14)embers.spawn(campObj.x+rr(-0.3,0.3),0.6,campObj.z+rr(-0.3,0.3),rr(-0.2,0.2),rr(0.8,1.6),rr(-0.2,0.2),rr(0.8,1.8));embers.update(dt,-0.3,0.5);
+  if(state.fire>0&&Math.random()<dt*14*Math.min(1,state.fire/50))embers.spawn(campObj.x+rr(-0.3,0.3),0.6,campObj.z+rr(-0.3,0.3),rr(-0.2,0.2),rr(0.8,1.6),rr(-0.2,0.2),rr(0.8,1.8));embers.update(dt,-0.3,0.5);
   if(AU.on){const dc=Math.hypot(player.x-campObj.x,player.z-campObj.z);const near=clamp(1-(dc-3)/12,0,1);
-    AU.music.gain.setTargetAtTime(near*0.9*(player.listen?0.3:1),now(),0.4);AU.fire.gain.setTargetAtTime(clamp(1-dc/9,0,1)*0.06,now(),0.2);
+    const fk2=state.fire<=0?0:Math.min(1,state.fire/40);AU.music.gain.setTargetAtTime(near*0.9*fk2*(player.listen?0.3:1),now(),0.4);AU.fire.gain.setTargetAtTime(clamp(1-dc/9,0,1)*0.06*fk2,now(),0.2);
     AU.drone.gain.setTargetAtTime((1-near*0.8)*0.11*(player.listen?0.35:1),now(),0.3);AU.wind.gain.setTargetAtTime((1-near*0.7)*0.06*(player.listen?0.3:1),now(),0.3);
     AU.world.gain.setTargetAtTime(player.listen?2.4:1,now(),0.15);musicTick();
     if(near>0.3&&Math.random()<dt*9*near){const v=voice({pos:{x:campObj.x,z:campObj.z},dur:0.2,vol:rr(0.08,0.25),verb:0.1,h:0.3});const t=now();const nz=mkNoise(t,t+0.02,null);const hp=mkFilt('highpass',rr(1500,4000),1);nz.connect(hp);const g=mkGain(0,v.in);hp.connect(g);adsr(g,t,0.001,1,0.015)}
@@ -1821,14 +1829,18 @@ function update(dt){state.time+=dt;
   mapT-=dt;if(mapT<=0&&state.freed.carto){mapT=0.25;drawMap()}
   msgTimer-=dt;if(msgTimer<=0)$('msg').style.opacity=0;
   $('hpb').style.width=(player.hp/maxHp()*100)+'%';$('stb').style.width=(player.st/maxSt()*100)+'%';$('hpb').parentElement.style.width=(260*maxHp()/100)+'px';$('stb').parentElement.style.width=(260*maxSt()/100)+'px';
-  $('sanb').style.width=player.san+'%';$('pot').textContent=player.potions+'/'+maxPot();$('gold').textContent=player.gold;$('listen').hidden=!player.listen}
+  $('sanb').style.width=state.fire+'%';$('sanb').style.opacity=state.fire<25?(0.5+0.5*Math.sin(state.time*8)):1;$('wood').textContent=state.wood;$('pot').textContent=player.potions+'/'+maxPot();$('gold').textContent=player.gold;$('listen').hidden=!player.listen}
 let ghost=null;
 function spawnGhost(){const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);for(let k=0;k<40;k++){const p=randomTileNear(7,12);if(!p)continue;const dx=p.x-player.x,dz=p.z-player.z,d=Math.hypot(dx,dz),dot=(dx*fx+dz*fz)/d;if(dot<0.25||dot>0.75||!losClear(p.x,p.z,player.x,player.z))continue;
   const m=plane(1.15,1.45,new THREE.MeshBasicMaterial({map:OMB_SET.tex[0],alphaTest:0.5,side:THREE.DoubleSide}));const e=plane(1.15,1.45,glowMat(OMB_SET.eye[0],1));m.position.set(p.x,0,p.z);e.position.set(p.x,0.01,p.z);levelGroup.add(m);levelGroup.add(e);billboards.push(m,e);ghost={mesh:m,eyes:e,x:p.x,z:p.z,t:rr(2.5,4)};return}}
 function killGhost(){if(ghost){levelGroup.remove(ghost.mesh);levelGroup.remove(ghost.eyes)}ghost=null}
-function updateSanity(dt){let ds=player.inCamp?6:-(0.32+fear*3.2+(level.depth===3?0.35:0));player.san=clamp(player.san+ds*dt,0,100);const s=player.san;
-  if(player.inCamp){if(ghost)killGhost();return}
-  if(s<55&&!state.tutorial.san1){state.tutorial.san1=true;flash('Tu entends des choses…','Ta santé mentale baisse dans le noir et face aux monstres. Repose-toi au feu de camp.',5)}
+function updateFire(dt){const was=state.fire;state.fire=Math.max(0,state.fire-dt*0.24);
+  if(was>60&&state.fire<=60&&!state.tutorial.fire){state.tutorial.fire=true;flash('Le feu faiblit','Brise des caisses et ramasse des bûches dans le donjon, puis alimente le feu au camp.',5)}
+  if(was>25&&state.fire<=25)flash('Le feu de camp va mourir','Rapporte du bois vite. Sans feu, le camp ne te protège plus.',4.5);
+  if(was>0&&state.fire<=0){flash('Le feu de camp est éteint','Les monstres peuvent entrer dans le camp. Rallume-le avec 3 bûches.',5.5);sFssh({x:campObj.x,z:campObj.z});flowT=0}}
+function updateSanity(dt){updateFire(dt);player.san=clamp(state.fire*1.4+10,0,100);const s=player.san;
+  if(player.inCamp&&state.fire>0){if(ghost)killGhost();return}
+  if(s<55&&!state.tutorial.san1){state.tutorial.san1=true;flash('Tu entends des choses…','Le feu faiblit, et l\'obscurité te gagne.',4)}
   if(s<40&&!state.tutorial.san2){state.tutorial.san2=true;flash('Tes yeux te trompent.','',3)}
   state.hsT=(state.hsT==null?8:state.hsT)-dt;if(s<55&&state.hsT<=0){state.hsT=rr(5,11)*(s<30?0.6:1);const fx=-Math.sin(player.yaw),fz=-Math.cos(player.yaw);const pos={x:player.x-fx*rr(2,4),z:player.z-fz*rr(2,4),h:1.4};const r=Math.random();
     if(r<0.3)sWhisper(pos,0.6);else if(r<0.5)sGobMutter(pos);else if(r<0.7)sRampBreath(pos,0.6);else if(r<0.85)sFarSteps(pos);else sCry(pos,rr(250,300),0,0.7)}
@@ -1858,7 +1870,7 @@ function render(dt){
     else{L.setPosition(camera.position.x,camera.position.y,camera.position.z);L.setOrientation(fx,0,fz,0,1,0)}}
   const fl=0.85+0.1*Math.sin(state.time*11)+0.07*Math.sin(state.time*23.7)+Math.random()*0.06;
   torchLight.distance=13*(1+state.bonus.torch);torchLight.intensity=1.55*fl*(1-fear*0.35)*(fear>0.25&&Math.random()<fear*0.14?0.2:1);torchLight.position.set(player.x-Math.cos(player.yaw)*0.35,EYE+0.15,player.z+Math.sin(player.yaw)*0.35);
-  fireLight.intensity=2.1*(0.85+0.15*Math.sin(state.time*7)+Math.random()*0.1);
+  const fk=state.fire<=0?0:0.35+0.65*Math.min(1,state.fire/60);fireLight.intensity=2.1*fk*(0.85+0.15*Math.sin(state.time*7)+Math.random()*0.1);if(campObj.flame){campObj.flame.visible=fk>0;campObj.flame.scale.set(0.5+0.5*fk,0.4+0.6*fk,1)}
   const ts=level.torches.filter(t=>t.lit).map(t=>({t,d:(t.x-player.x)**2+(t.z-player.z)**2})).sort((a,b)=>a.d-b.d);
   poolLights.forEach((l,i)=>{const e=ts[i];if(e){l.position.set(e.t.x-e.t.dx*0.4,1.95,e.t.z-e.t.dy*0.4);l.intensity=1.05*(0.85+0.15*Math.sin(state.time*9+i*2)+Math.random()*0.08)*(1-fear*0.6)*(fear>0.4&&Math.random()<fear*0.1?0:1)}else{l.position.y=-50;l.intensity=0}});
   flameT-=dt;if(flameT<=0){flameT=0.075;drawFlame(flameCanvas,state.time,false);flameTex.needsUpdate=true;drawFlame(fireCanvas,state.time*0.8+3,true);fireTex.needsUpdate=true}
@@ -1896,7 +1908,7 @@ function anyInput(){if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume()}
 function startGame(){if(state.mode!=='title')return;initAudio();$('title').hidden=true;$('hud').hidden=false;state.mode='play';state.time=0;if(lastDevice==='kb')lockPointer();
   setTimeout(()=>{if(AU.ctx&&AU.ctx.state!=='running')flash('Son désactivé par le navigateur','Clique dans la fenêtre ou appuie sur une touche du clavier pour l\'activer.',8)},2500);
   setTimeout(()=>flash('Ton feu de camp',`Quelqu'un a laissé un sac près du feu. Approche-toi et appuie sur ${kbd('interact')}.`,7),600)}
-function respawn(){$('dead').hidden=true;player.dead=false;newFloor();player.san=Math.max(player.san,60);state.mode='play';flash('Tu te réveilles près du feu','Le donjon a changé. Tes améliorations et ton coffre sont intacts.',4.5);if(lastDevice==='kb')lockPointer()}
+function respawn(){$('dead').hidden=true;player.dead=false;state.fire=Math.max(state.fire,30);newFloor();state.mode='play';flash('Tu te réveilles près du feu','Le donjon a changé. Tes améliorations et ton coffre sont intacts.',4.5);if(lastDevice==='kb')lockPointer()}
 $('startBtn').addEventListener('click',()=>{lastDevice='kb';startGame()});
 $('cfgBtn').addEventListener('click',()=>openPadCfg());
 $('testBtn').addEventListener('click',()=>openPadTest());
