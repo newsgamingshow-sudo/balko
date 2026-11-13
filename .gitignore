@@ -3,3 +3,4 @@ node_modules/
 produit/dist/
 __pycache__/
 demos/simon-paysage/
+dist/

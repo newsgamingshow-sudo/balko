@@ -52,17 +52,17 @@ body.dark{--ink:#f4f1ff;--ink-soft:rgba(244,241,255,.7);--card:rgba(20,18,48,.78
 <button class="icon" id="mute" type="button" aria-label="Couper le son"></button>
 <div class="panel" id="menu">
   <h1>Empil<span>o</span></h1>
-  <p>Posez les cubes au bon moment. Un cube parfait ne perd rien. Montez le plus haut possible.</p>
+  <p data-t="intro">Posez les cubes au bon moment. Un cube parfait ne perd rien. Montez le plus haut possible.</p>
   <p id="bestLine"></p>
-  <div class="row"><button class="btn" id="play" type="button">Jouer</button></div>
+  <div class="row"><button class="btn" id="play" type="button" data-t="play">Jouer</button></div>
 </div>
 <div class="panel" id="over" hidden>
-  <p>Votre tour mesure</p>
+  <p data-t="towerIs">Votre tour mesure</p>
   <div class="big" id="final"></div>
   <p id="record"></p>
-  <div class="row"><button class="btn" id="again" type="button">Rejouer</button><button class="btn ghost" id="share" type="button">Partager</button></div>
+  <div class="row"><button class="btn" id="again" type="button" data-t="again">Rejouer</button><button class="btn ghost" id="share" type="button" data-t="share">Partager</button></div>
 </div>
-<div class="hint" id="hint" hidden>Touchez pour poser</div>
+<div class="hint" id="hint" hidden data-t="hint">Touchez pour poser</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -72,7 +72,23 @@ const $=id=>document.getElementById(id);
 const BOT=/bot/.test(location.hash+location.search);
 if(BOT)document.body.classList.add('bot');
 const M_PER_BLOCK=5, H=0.5, BASE=3.2, TOL=0.11;
-const LANDMARKS=[[50,"l'Arc de Triomphe"],[69,"les tours de Notre-Dame"],[93,"la statue de la Liberté"],[210,"la tour Montparnasse"],[330,"la tour Eiffel"],[443,"l'Empire State Building"],[828,"le Burj Khalifa"],[1000,"1 kilomètre"]];
+// ---------- Langue : français ou anglais selon le navigateur (?lang=en pour forcer) ----------
+const LANG=(new URLSearchParams(location.search).get('lang')||navigator.language||'en').toLowerCase().startsWith('fr')?'fr':'en';
+document.documentElement.lang=LANG;
+const NUM=LANG==='fr'?'fr-FR':'en-US';
+const TXT={
+  fr:{intro:"Posez les cubes au bon moment. Un cube parfait ne perd rien. Montez le plus haut possible.",play:"Jouer",towerIs:"Votre tour mesure",again:"Rejouer",share:"Partager",hint:"Touchez pour poser",
+      perfect:"Parfait",pass:n=>`Vous dépassez ${n} !`,cubes:n=>`${n} cube${n>1?'s':''}`,newRec:"Nouveau record ! ",rec:b=>`Record : ${b} · `,taller:n=>`Plus haut que ${n}.`,next:(n,h)=>`Prochain objectif : ${n} (${h} m).`,
+      best:(b,m)=>`Votre record : ${b} cubes · ${m} m`,shareTxt:(n,m)=>`J'ai empilé ${n} cubes (${m} m) sur Empilo. Tu fais mieux ?`,copied:"Lien copié",copyFail:"Copie impossible",mute:"Couper le son",unmute:"Activer le son",canvas:"Zone de jeu : touchez pour poser le cube",
+      marks:["l'Arc de Triomphe","les tours de Notre-Dame","la statue de la Liberté","la tour Montparnasse","la tour Eiffel","l'Empire State Building","le Burj Khalifa","1 kilomètre"]},
+  en:{intro:"Drop each block at the right moment. A perfect drop loses nothing. Build as high as you can.",play:"Play",towerIs:"Your tower is",again:"Play again",share:"Share",hint:"Tap to drop",
+      perfect:"Perfect",pass:n=>`You passed ${n}!`,cubes:n=>`${n} block${n===1?'':'s'}`,newRec:"New record! ",rec:b=>`Best: ${b} · `,taller:n=>`Taller than ${n}.`,next:(n,h)=>`Next goal: ${n} (${h} m).`,
+      best:(b,m)=>`Your best: ${b} blocks · ${m} m`,shareTxt:(n,m)=>`I stacked ${n} blocks (${m} m) in Empilo. Can you beat me?`,copied:"Link copied",copyFail:"Couldn't copy",mute:"Mute",unmute:"Unmute",canvas:"Game area: tap to drop the block",
+      marks:["the Arc de Triomphe","the towers of Notre-Dame","the Statue of Liberty","the Montparnasse Tower","the Eiffel Tower","the Empire State Building","the Burj Khalifa","1 kilometre"]}
+}[LANG];
+document.querySelectorAll('[data-t]').forEach(el=>{el.textContent=TXT[el.dataset.t]});
+$('c').setAttribute('aria-label',TXT.canvas);
+const LANDMARKS=[50,69,93,210,330,443,828,1000].map((h,i)=>[h,TXT.marks[i]]);
 // Ciel selon l'altitude (m) : haut, bas
 const SKY=[[0,"#9fd3ff","#fdf1e6"],[150,"#7fb6f5","#ffd9b0"],[300,"#f59bb0","#ffc58a"],[450,"#5b3f8c","#e0789a"],[650,"#1c1747","#3f2a73"],[850,"#06071a","#120f35"]];
 
@@ -126,7 +142,7 @@ const sfx={
 function vib(ms){if(!BOT&&navigator.vibrate)try{navigator.vibrate(ms)}catch(e){}}
 const ICON_ON='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg>';
 const ICON_OFF='<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
-function drawMute(){$('mute').innerHTML=muted?ICON_OFF:ICON_ON;$('mute').setAttribute('aria-label',muted?'Activer le son':'Couper le son')}
+function drawMute(){$('mute').innerHTML=muted?ICON_OFF:ICON_ON;$('mute').setAttribute('aria-label',muted?TXT.unmute:TXT.mute)}
 $('mute').onclick=e=>{e.stopPropagation();muted=!muted;try{localStorage.setItem('empilo-muted',muted?'1':'0')}catch(err){}drawMute()};
 drawMute();
 
@@ -157,7 +173,7 @@ function spawn(){
 }
 function score(n){
   $('score').textContent=n;
-  $('alt').textContent=(n*M_PER_BLOCK).toLocaleString('fr-FR')+' m';
+  $('alt').textContent=(n*M_PER_BLOCK).toLocaleString(NUM)+' m';
 }
 function toast(title,text){const t=$('toast');t.innerHTML=(title?`<b>${title}</b>`:'')+text;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1900)}
 function ring(b){
@@ -179,7 +195,7 @@ function drop(){
       if(ax==='x')w=Math.min(BASE,w+.18);else d=Math.min(BASE,d+.18);
     }
     sfx.perfect(streak-1);vib(18);
-    $('combo').textContent=streak>1?`Parfait ×${streak}`:'Parfait';$('combo').style.opacity=1;
+    $('combo').textContent=streak>1?`${TXT.perfect} ×${streak}`:TXT.perfect;$('combo').style.opacity=1;
     clearTimeout(drop._c);drop._c=setTimeout(()=>$('combo').style.opacity=0,900);
   }else{
     streak=0;const keep=size-ad,newC=top[ax]+delta/2,chopC=newC+Math.sign(delta)*(keep/2+ad/2);
@@ -194,7 +210,7 @@ function drop(){
   const n=stack.length-2;score(n);
   speed=Math.min(9,4.2+n*.06);
   const alt=n*M_PER_BLOCK;
-  for(const [h,name] of LANDMARKS){if(alt>=h&&lastMark<h){lastMark=h;toast(`${h.toLocaleString('fr-FR')} m`,`Vous dépassez ${name} !`);sfx.mark();}}
+  for(const [h,name] of LANDMARKS){if(alt>=h&&lastMark<h){lastMark=h;toast(`${h.toLocaleString(NUM)} m`,TXT.pass(name));sfx.mark();}}
   spawn();
 }
 function gameOver(){
@@ -203,9 +219,9 @@ function gameOver(){
   const towerH=stack[stack.length-1].y+H*4;
   viewTarget=Math.max(11,towerH*1.55+4);camYTarget=towerH/2-1;
   const isBest=n>best;if(isBest){best=n;try{localStorage.setItem('empilo-best',best)}catch(e){}}
-  $('final').textContent=`${n} cube${n>1?'s':''} · ${alt.toLocaleString('fr-FR')} m`;
+  $('final').textContent=`${TXT.cubes(n)} · ${alt.toLocaleString(NUM)} m`;
   const passed=LANDMARKS.filter(l=>alt>=l[0]).pop();
-  $('record').textContent=(isBest&&n>0?'Nouveau record ! ':'Record : '+best+' · ')+(passed?`Plus haut que ${passed[1]}.`:`Prochain objectif : ${LANDMARKS[0][1]} (${LANDMARKS[0][0]} m).`);
+  $('record').textContent=(isBest&&n>0?TXT.newRec:TXT.rec(best))+(passed?TXT.taller(passed[1]):TXT.next(LANDMARKS[0][1],LANDMARKS[0][0]));
   setTimeout(()=>{if(state==='over'&&!BOT){$('over').hidden=false;$('again').focus()}},1100);
 }
 function start(){
@@ -221,12 +237,12 @@ addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){if(state==
 $('play').onclick=start;$('again').onclick=start;
 $('share').onclick=async()=>{
   const n=stack.length-2,url=location.href.split('#')[0];
-  const text=`J'ai empilé ${n} cubes (${(n*M_PER_BLOCK).toLocaleString('fr-FR')} m) sur Empilo. Tu fais mieux ?`;
+  const text=TXT.shareTxt(n,(n*M_PER_BLOCK).toLocaleString(NUM));
   try{if(navigator.share){await navigator.share({title:'Empilo',text,url});return}}catch(e){}
-  try{await navigator.clipboard.writeText(text+' '+url);$('share').textContent='Lien copié'}catch(e){$('share').textContent='Copie impossible'}
-  setTimeout(()=>$('share').textContent='Partager',1800);
+  try{await navigator.clipboard.writeText(text+' '+url);$('share').textContent=TXT.copied}catch(e){$('share').textContent=TXT.copyFail}
+  setTimeout(()=>$('share').textContent=TXT.share,1800);
 };
-$('bestLine').textContent=best?`Votre record : ${best} cubes · ${(best*M_PER_BLOCK).toLocaleString('fr-FR')} m`:'';
+$('bestLine').textContent=best?TXT.best(best,(best*M_PER_BLOCK).toLocaleString(NUM)):'';
 
 // ---------- Ciel ----------
 const lerpHex=(a,b,t)=>{const ca=new THREE.Color(a),cb=new THREE.Color(b);return '#'+ca.lerp(cb,t).getHexString()};
